@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>@ViewData["Title"]</title>
+    <link href="/css/style.css?=v5" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon.ico">
+    
+</head>
+<body>
+<div class=page>
+    <h1><img src="/images/christmasx3.png" alt="Icon1"/>Chirp!</h1>
+     <div class=navigation>
+        @if (User?.Identity?.IsAuthenticated == true)
+        {
+            <div>
+                <a href="/@(User.Identity.Name)">My Timeline</a> |
+                <a href="/">Public Timeline</a> |
+                <a href="/Identity/Account/Manage">Manage Account</a> |
+                <a href="/Identity/Account/Logout">Logout [@(User.Identity.Name)]</a>
+            </div>
+        }
+        else
+        {
+            <div>
+                <a href="/">Public ChirpLine</a> |
+                <a href="/Identity/Account/Register">Register account</a>
+                <a href="/Identity/Account/Login">Login</a>
+            </div>
+        }
+    </div>
+
+    
+    <div class=body>
+            @RenderBody()
+    </div>
+    <div class=footer>
+        Chirp &mdash; An ASP.NET Application
+    </div>
+</div>
+
+</body>
+@await RenderSectionAsync("Scripts", required: false)
+</html>

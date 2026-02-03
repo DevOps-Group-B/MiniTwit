@@ -1,0 +1,12 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	
+	
+	
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=da9d88ea_002D704c_002D425d_002Daf7e_002D352ede5b9c8a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Get_Cheeps_From_Author_Is_Usable" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::68E8CF14-F8CE-1213-5F82-9F0640167EA6::net8.0::Chirp.Tests.UnitTest.CheepServiceTests.Get_Cheeps_From_Author_Is_Usable&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::68E8CF14-F8CE-1213-5F82-9F0640167EA6::net8.0::Chirp.Tests.UnitTest.CheepServiceTests.GetCheepsFromUser_returns_cheeps_from_stub&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::62EE459B-FEF4-0BE8-0E30-158CFDB19555::net8.0::PlaywrightTests.End2EndUserJourney&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	</wpf:ResourceDictionary>

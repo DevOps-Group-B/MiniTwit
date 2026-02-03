@@ -1,0 +1,18 @@
+1. To generate the test coverage reports, start by running
+dotnet restore  #which will install coverlet collector
+
+2. now run
+dotnet test --collect:"XPlat Code Coverage"  #which generates the test data
+
+3. if not already installed, install reportgenerator
+dotnet tool install -g dotnet-reportgenerator-globaltool
+
+4. make sure reportgenerator has a path
+
+5. generate the report 
+reportgenerator "-reports:**/TestResults/**/coverage.cobertura.xml" "-targetdir:coveragereport"
+
+6. open the report
+(macOS) open coveragereport/index.html
+(windows) start coveragereport/index.html
+

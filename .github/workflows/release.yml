@@ -1,0 +1,75 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' 
+  workflow_dispatch: 
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [linux-x64, win-x64, osx-x64]
+        archive_ext: [tar.gz, zip] 
+      # Step 1: Checkout Repo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup .NET
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Step 3: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 4: Publish 
+      - name: Publish the project
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME:-manual-$(date +%Y%m%d%H%M%S)}"
+          release_name="App-$tag-${{ matrix.target }}"
+          # Build for net8.0
+          dotnet publish src/Chirp.Web/Chirp.Razor.Web.csproj -f net8.0 -r "${{ matrix.target }}" -c Release -o "$release_name"
+
+          if [ "${{ matrix.archive_ext }}" = "zip" ]; then
+            # Windows runner has 7zip built in
+            7z a -tzip "${release_name}.zip" "./${release_name}/*" >/dev/null
+          else
+            tar czf "${release_name}.tar.gz" "$release_name"
+          fi
+
+          rm -rf "$release_name"
+
+      # Step 5: Upload artifacts
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.target }}-${{ matrix.archive_ext }}
+          path: |
+            App-*-${{ matrix.target }}.zip
+            App-*-${{ matrix.target }}.tar.gz
+          if-no-files-found: error
+
+      # Step 6: Create GitHub Release and Attach Artifacts
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }} # Use the tag that triggered the workflow
+          name: Release ${{ github.ref_name }}
+          body: |
+            This is an automated release for version ${{ github.ref_name }}.
+            Please find the artifacts attached below.
+          files: App-*-${{ matrix.target }}.${{ matrix.archive_ext }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token for authentication
+

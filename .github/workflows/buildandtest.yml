@@ -1,0 +1,41 @@
+name: .NET Build, Test, and Publish Workflow
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-test:
+    name: Build, Test, and Publish
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: [linux-x64, win-x64, osx-x64]
+        archive_ext: [tar.gz, zip] 
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup .NET
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Step 3: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 4: Build the project
+      - name: Build the project
+        run: dotnet build --no-restore --configuration Release
+
+      # Step 5: Run tests
+      #- name: Run tests
+      #  run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx"

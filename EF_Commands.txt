@@ -1,0 +1,10 @@
+Remember to cd to the chirp.sln and delete the old migrations beforehand
+
+
+Powershell Command
+dotnet ef migrations add InitialMigration --context CheepDbContext --project .\src\Chirp.Infrastructure\Chirp.Infrastructure.csproj --startup-project .\src\Chirp.Web\Chirp.Razor.Web.csproj
+
+Bash Command 
+dotnet ef migrations add InitialMigration --context CheepDbContext
+--project .\src\Chirp.Infrastructure\Chirp.Infrastructure.csproj `
+--startup-project .\src\Chirp.Web\Chirp.Web.csproj
