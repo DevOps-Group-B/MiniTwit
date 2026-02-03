@@ -1,0 +1,16 @@
+@model Chirp.Web.Pages.Models.CheepFormModel
+
+@{
+    var author = Model.Author;
+
+    <div class="cheepbox">
+        <h3>What's on your mind @(author.Name)?</h3>
+        <form method="post">
+            <div>
+                <input style="float: left" type="text" asp-for="FormData.Message">
+                <input type="submit" value="Share">
+            </div>
+            <span asp-validation-for="FormData.Message" class="text-danger"></span>
+        </form>
+    </div>
+}

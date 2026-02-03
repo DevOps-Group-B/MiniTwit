@@ -1,0 +1,16 @@
+﻿@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "External Login Issue";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <p class="text-danger">
+            An error occurred while trying to log in with your GitHub.
+        </p>
+        <a asp-page="./Login" class="btn btn-primary">Return to Login</a>
+    </div>
+</div>

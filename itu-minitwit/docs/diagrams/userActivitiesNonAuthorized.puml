@@ -1,0 +1,37 @@
+@startuml
+start
+note
+    Non-authorized User
+endnote
+
+:Display public timeline;
+
+while (Continue browsing?) is (Yes)
+
+    if (View a different timeline?) then (No)
+
+    else (Yes)
+        if (On public timeline?) then (Yes)
+            :Display private timeline;
+        else (No)
+            :Display public timeline;
+        endif
+    endif
+
+    if (Want to see next page?) then (Yes)
+        :Display next page;
+    endif
+
+    if (Register or Login?) then (Yes)
+        if (Already registered?) then (Yes)
+            :Login;
+            stop
+        else (No)
+            :Register;
+            stop
+        endif
+    endif
+endwhile
+stop
+
+@enduml

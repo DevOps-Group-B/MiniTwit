@@ -1,0 +1,21 @@
+@startuml
+actor Client as User
+boundary Azure_WebServer as Azure
+control PageModel
+control CheepService
+control CheepRepository
+database Database
+
+User -> Azure: HTTP GET "/"
+Azure -> User: Redirect to HTTPS
+User -> Azure: HTTPS GET "/"
+Azure -> PageModel: Route to PublicModel.OnGet()
+PageModel -> CheepService: GetCheepsAsync(int page)
+CheepService -> CheepRepository: GetCheepsAsync(int page)
+CheepRepository -> Database: Query Cheeps Table
+Database --> CheepRepository: Return list of cheeps
+CheepRepository --> CheepService: (List<CheepDTO>, int totalCheeps)
+CheepService --> PageModel: (List<CheepDTO>, int totalCheeps)
+PageModel --> Azure: Pass PageResult
+Azure --> User: Rendered HTML response
+@enduml

@@ -1,0 +1,29 @@
+﻿@page "/"
+@using Chirp.Web.Pages.Models
+@model Chirp.Web.Pages.PublicModel
+@{
+    ViewData["Title"] = "MiniTwit!";
+    Layout = "Shared/_Layout";
+}
+
+<div>
+    <h2> Public Timeline </h2>
+
+    @if (User.Identity!.IsAuthenticated && Model.AuthenticatedAuthor != null)
+    {
+        <partial name="_CheepFormPartial" model="new CheepFormModel { Author = Model.AuthenticatedAuthor, FormData = Model.FormData }" />
+    }
+    
+    @if (Model.Cheeps.Any())
+    {
+        <partial name="_MessageListPartial" model="Model" />
+    }
+    else
+    {
+        <em>There are no cheeps so far.</em>
+    }
+</div>
+
+@section Scripts {
+    <partial name="Shared/_ValidationScriptsPartial" />
+}

@@ -1,0 +1,45 @@
+@using Chirp.Core.Services
+@using Chirp.Infrastructure.Chirp.Services
+@inject IAuthorService AuthorService
+
+<div class=navigation style="display: flex; justify-content: space-between;">
+    @if (User.Identity!.IsAuthenticated)
+    {
+        var email = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+        var author = await AuthorService.GetAuthorByEmailAsync(email!);
+        
+        <div>
+            <a href="/@(author!.Name)">my timeline</a> |
+            <a href="/">public timeline</a> |
+            <a href="/AboutMe">about me</a> |
+            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+                <button  type="submit" class="nav-link btn btn-link text-dark">logout [@(author.Name)]</button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div>
+            <a href="/">public timeline</a> |
+            <a asp-area="Identity" asp-page="/Account/Register">register</a> |
+            <a asp-area="Identity" asp-page="/Account/Login">login</a>
+        </div>
+    }
+
+    @if (ViewData.ModelMetadata.Properties.Any(p => p.PropertyName == "PageNumber"))
+    {
+        <div>
+            @if (Model.PageNumber > 1)
+            {
+                <a href="?page=@(Model.PageNumber-1)">&lt;</a>
+            }
+             
+            <span> @(Model.PageNumber) </span>
+
+            @if (Model.PageNumber < (int)Math.Ceiling((double)Model.CheepCount / 32))
+            {
+                <a href="?page=@(Model.PageNumber+1)">&gt;</a>
+            }
+        </div>
+    }
+</div>

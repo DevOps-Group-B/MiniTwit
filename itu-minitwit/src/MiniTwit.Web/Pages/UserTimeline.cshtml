@@ -1,0 +1,67 @@
+﻿@page "/{author}"
+@using Chirp.Web.Pages.Models
+
+@model Chirp.Web.Pages.UserTimelineModel
+
+@{
+    ViewData["Title"] = "MiniTwit!";
+    ViewData["page"] = "user-timeline";
+    Layout = "Shared/_Layout";
+    
+    var routeName = HttpContext.GetRouteValue("author") as string;
+}
+
+<div>
+    <h2> @routeName's Timeline </h2>
+
+    @if (User.Identity!.IsAuthenticated && Model.AuthenticatedAuthor != null)
+    {
+        var author = Model.AuthenticatedAuthor;
+
+        if (routeName == author!.Name)
+        {
+            <partial name="_BioPartial" model='new BioModel {
+                 RouteName = routeName,
+                 IsMyBio = true,
+                 BioText = Model.BioText
+            }' />
+
+            <partial name="_CheepFormPartial" model="new CheepFormModel { Author = Model.AuthenticatedAuthor, FormData = Model.FormData }" />
+
+            <div style="display: flex; gap: 20px;">
+                <partial name="_FollowStatCardPartial" model="new FollowStatCardModel { Author = author }" />
+                <partial name="_AchievementCardPartial" model="Model" />
+            </div>
+        }
+        else
+        {
+            <partial name="_BioPartial" model='new BioModel {
+                 RouteName = routeName,
+                 IsMyBio = false,
+                 BioText = Model.BioText
+            }' />
+        }
+    }
+    else
+    {
+        <partial name="_BioPartial" model='new BioModel {
+             RouteName = routeName,
+             IsMyBio = false,
+             BioText = Model.BioText
+        }' />
+    }
+
+    @if (Model.Cheeps.Any())
+    {
+        <partial name="_MessageListPartial" model="Model" />
+    }
+    else
+    {
+        <div style="margin-top: 10px;"><em>There are no cheeps so far.</em></div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="Shared/_ValidationScriptsPartial" />
+    <script src="/js/bioScript.js"></script>
+}
