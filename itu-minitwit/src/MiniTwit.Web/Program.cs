@@ -26,10 +26,10 @@ builder.Services.AddRazorPages();
 
 /*
   The database path is set to the environment variable CHIRPDBPATH.
-  If the environment variable is not set, the database will be created in the temp folder with the name chirp.db.
+  If the environment variable is not set, the database will be created in the temp folder with the name minitwit.db.
   Otherwise, the database will be created in the path specified by the environment variable.  
 */
-string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combine(Path.GetTempPath(), "chirp.db");
+string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combine(Path.GetTempPath(), "minitwit.db");
 
 builder.Services.AddDbContext<ChirpDBContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 
