@@ -164,16 +164,13 @@ public class SimulatorApiController : ControllerBase
         
         if (!IsAuthorized()) 
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-
-        // TODO: Get user and followers
-        // var user = await _userService.GetByUsername(username);
-        // if (user == null) return NotFound();
         
-        // var followingNames = await _userService.GetFollowingNames(user.Id, no);
+        var user = await _authorService.GetAuthorByNameAsync(username);
+        if (user == null) return NotFound();
         
-        // return Ok(new FollowsResponse { Follows = followingNames });
+        var followingNames = await _authorService.GetFollowingAmountAsync(no, user.Id);
         
-        return Ok(new FollowsResponseDTO { Follows = new List<string>() }); // Placeholder
+        return Ok(new FollowsResponseDTO { Follows = followingNames });
     }
 
     [HttpPost("fllws/{username}")]
@@ -184,25 +181,16 @@ public class SimulatorApiController : ControllerBase
         if (!IsAuthorized()) 
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
 
-        // TODO: Get the 'Who' (user making the request)
-        // var userWho = await _userService.GetByUsername(username);
-        // if (userWho == null) return NotFound();
+        var user = await _authorService.GetAuthorByNameAsync(username);
+        if (user == null) return NotFound();
 
         if (!string.IsNullOrEmpty(payload.Follow))
         {
-             // TODO: Handle Follow
-             // var userToFollow = await _userService.GetByUsername(payload.Follow);
-             // if (userToFollow == null) return NotFound();
-             
-             // await _userService.Follow(userWho.Id, userToFollow.Id);
+             await _authorService.FollowAuthorAsync(user.Name, payload.Follow);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
-             // TODO: Handle Unfollow
-             // var userToUnfollow = await _userService.GetByUsername(payload.Unfollow);
-             // if (userToUnfollow == null) return NotFound();
-             
-             // await _userService.Unfollow(userWho.Id, userToUnfollow.Id);
+            await _authorService.UnfollowAuthorAsync(user.Name, payload.Unfollow);
         }
 
         return NoContent();
