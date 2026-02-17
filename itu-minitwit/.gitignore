@@ -107,4 +107,5 @@ fabric.properties
 
 #Private Environment files
 .env.ps1
+.env
 .vagrant/
