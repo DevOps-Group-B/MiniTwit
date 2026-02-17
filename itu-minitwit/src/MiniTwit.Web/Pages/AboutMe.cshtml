@@ -1,0 +1,76 @@
+@page
+@using Chirp.Web.Pages.Models
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Chirp.Web.Pages.AboutMeModel
+
+@{
+    ViewData["Title"] = "MiniTwit!";
+    ViewData["page"] = "about-me";
+    Layout = "Shared/_Layout";
+    var author = Model.AuthenticatedAuthor;
+    var hasBio = !string.IsNullOrEmpty(author?.Bio);
+}
+
+<div>
+    <h2>About Me</h2>
+
+    @if (User.Identity!.IsAuthenticated && author != null){
+        <div>
+            <h3>Profile Information</h3>
+            <p><strong>Name:</strong> @author.Name</p>
+            <p><strong>Email:</strong> @author.Email</p>
+        </div>
+    
+        <div>
+            <h3>My Bio</h3>
+            <p id="author-bio">@(hasBio ? author!.Bio : $"You have no bio yet...")</p>
+        </div>
+        
+        <div>
+            <h3>My Cheeps</h3>
+            @if (Model.Cheeps.Any())
+            {
+                <partial name="_MessageListPartial" model="Model" />
+            }
+            else
+            {
+                <p><em>There are no cheeps so far.</em></p>
+            }
+        </div>
+        
+        <div>
+            <h3>Followers and Following</h3>
+            <div style="display: flex; gap: 20px;">
+                <partial name="_FollowStatCardPartial" model="new FollowStatCardModel { Author = author }"/>
+            </div>
+        </div>
+
+        <div>
+            <h3>My Achievements</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                @foreach (var achievement in Model.Achievements)
+                {
+                    <div class="achievement-card" style="width: 300px; flex: none;">
+                        <img style="width: 110px;" src="@(achievement.ImagePath)" alt="Achievement Badge" />
+                        <div style="margin-top: 10px;">
+                            <h4 class="achievement-heading">@(achievement.Title)</h4>
+                            <p class="achievement-p">@achievement.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+
+        <div>
+            <h3>Delete Account</h3>
+            <p>This action cannot be undone.</p>
+            <form method="post" asp-page-handler="ForgetMe">
+                <button type="submit" name="forgetMeBTN" class="btn btn-danger">Forget me!</button>
+            </form>
+        </div>
+
+    } else {
+        <em>Login to see this page.</em>
+    }
+</div>

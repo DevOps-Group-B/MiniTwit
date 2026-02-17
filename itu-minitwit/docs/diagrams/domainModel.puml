@@ -1,0 +1,57 @@
+@startuml
+class IdentityUser {
+    + Id: string
+    + UserName: string
+    + Email: string
+    + PasswordHash: string
+}
+
+class Author {
+    + Name: string
+    + Cheeps: List<Cheep>
+    + Followers: List<AuthorFollower>
+    + Following: List<AuthorFollower>
+    + AuthorAchievements: List<AuthorAchievement>
+}
+
+class Cheep {
+    + CheepId: int
+    + Text: string
+    + TimeStamp: DateTime
+    + AuthorId: string
+    + Author: Author
+}
+
+class AuthorFollower {
+    + FollowerId: string
+    + Follower: Author
+    + FollowingId: string
+    + Following: Author
+}
+
+class Achievement {
+    + AchievementId: int
+    + Title: string
+    + Description: string
+    + ImagePath: string
+    + AuthorAchievements: List<AuthorAchievement>
+}
+
+class AuthorAchievement {
+    + AuthorId: string
+    + Author: Author
+    + AchievementId: int
+    + Achievement: Achievement
+    + AchievedAt: DateTime
+}
+
+class Author extends IdentityUser
+
+Author "1..1" -- "0..N" Cheep : Posts >
+
+Author "1..1" -- "0..N" AuthorFollower : Follower <
+Author "1..1" -- "0..N" AuthorFollower : Following <
+
+Achievement "1..1" -- "0..N" AuthorAchievement : Relates to <
+Author "1..1" - "0..N" AuthorAchievement : Acquires >
+@enduml

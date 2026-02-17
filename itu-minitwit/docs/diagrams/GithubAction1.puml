@@ -1,0 +1,21 @@
+@startuml
+title Build and Test on pushes/pull-requests
+
+start
+
+:Checkout Code;
+:Setup .NET (Install .NET SDK v8.x);
+:Restore Dependencies with **dotnet restore**;
+:Build Application with **dotnet build**;
+
+:Install Playwright CLI;
+:Install Playwright browsers;
+
+:Run Tests with **dotnet test**
+(configuration: ${{ matrix.configuration }});
+
+:Build Application in Release and Debug modes;
+:Publish Application to Output Directory;
+
+stop
+@enduml

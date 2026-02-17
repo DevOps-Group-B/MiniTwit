@@ -1,0 +1,60 @@
+@startuml
+start
+note
+    Authorized User
+endnote
+
+:Display private timeline;
+
+while (Continue browsing?) is (Yes)
+
+    if (View a different timeline?) then (No)
+        if (View About Me) then (No)
+            else (Yes)
+            if (Delete user?) then (No)
+            else (Yes)
+                :Click Forget Me!;
+                stop
+            endif
+        endif
+    else (Yes)
+        if (On a private timeline?) then (Yes)
+            :Display public timeline;
+        else (No)
+            :Display private timeline;
+            if (Is it your timeline?) then (No)
+            else (Yes)
+                if (Update Bio?) then (No)
+                else (Yes)
+                    :Write a new Bio;
+                endif
+            endif
+        endif
+        if (Follow/Unfollow someone?) then (No)
+        else (Yes)
+            :Click Follow/Unfollow;
+        endif
+        if (Post Cheep?) then (No)
+        else (Yes)
+            :Type Cheep;
+            :Share;
+            if (Valid?) then (No)
+            :Display warning;
+            else (Yes)
+            :Submit Cheep;
+            endif
+        endif
+    endif
+
+    if (Want to see next page?) then (No)
+    else (Yes)
+    :Display next page;
+    endif
+
+    if (Logout?) then (Yes)
+        stop
+    endif
+endwhile
+stop
+
+@enduml

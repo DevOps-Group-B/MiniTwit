@@ -1,0 +1,16 @@
+﻿@startuml
+
+package "Local" {
+    rectangle "Web application" as WebApplication
+    database "Local database" as LocalDB
+}
+
+
+package "Local" {
+    actor "Client" as Client
+}
+
+Client <-> WebApplication
+WebApplication <-> LocalDB
+
+@enduml 

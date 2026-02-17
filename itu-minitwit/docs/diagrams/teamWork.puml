@@ -1,0 +1,29 @@
+@startuml
+participant Team
+actor Developer
+actor Reviewer
+entity "GitHub Repository" as Repo
+
+Team -> Repo : Create new issue
+Team -> Developer : Assign issue to Developer
+Developer -> Repo : Create new branch
+Developer -> Developer : Develop feature
+Developer -> Repo : Push changes to branch
+Developer -> Repo : Create pull request
+Repo -> Repo : Automated tests
+Developer -> Reviewer : Request review
+Reviewer -> Reviewer : Review code
+group while [Code has issues]
+    Reviewer -> Developer : Request changes
+    Developer -> Developer : Make changes
+    Developer -> Repo : Push updated code
+    Repo -> Repo : Automated tests
+    Developer -> Reviewer : Request review
+    Reviewer -> Reviewer : Review code
+end
+Reviewer -> Repo : Approve pull request
+Reviewer -> Repo : Merge pull request to Main branch
+Reviewer -> Repo : Close issue
+Reviewer -> Repo : Delete branch
+
+@enduml

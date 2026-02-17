@@ -1,0 +1,32 @@
+@startuml
+title Build and Deploy Azure Web App
+
+start
+
+:Push to 'main' branch or PR to 'main';
+
+partition "Build Job" {
+    :Checkout Code;
+    :Set up .NET Core (v8.x);
+    :Build Solution (dotnet build Release);
+    :Install Playwright CLI;
+    :Install Playwright Browsers;
+    :Run Tests (dotnet test);
+    :Publish App (dotnet publish);
+    :Upload Build Artifact;
+}
+
+:Trigger Deploy Job;
+
+partition "Deploy Job" {
+    :Download Build Artifact;
+    :Login to Azure;
+    :Set Environment Variables;
+    :Deploy to Azure Web App;
+    :Output Web App URL;
+}
+
+:Deployment Complete;
+
+stop
+@enduml

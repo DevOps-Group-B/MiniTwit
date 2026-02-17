@@ -1,0 +1,21 @@
+﻿@startuml
+
+package "Global" {
+    rectangle "Web server" as WebServer
+    database "Azure database" as AzureDB
+}
+
+
+package "Local" {
+    actor "Client 1" as Client1
+    actor "Client 2" as Client2
+}
+
+cloud "Internet" as Internet
+
+AzureDB<-> WebServer
+WebServer <-> Internet
+Internet <-> Client2
+Internet <-> Client1
+
+@enduml 

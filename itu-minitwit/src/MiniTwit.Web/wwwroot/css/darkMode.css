@@ -1,0 +1,36 @@
+body.dark-mode {
+    --main: #171f27;
+    --light: #1e2a38;
+    --off-main: #3b444f;
+    --off-main2: #ababab;
+    --background-color: #151b22;
+    --link-color: #26776F;
+    --link-hover-color: #333;
+    --side-color: #26776F;
+    --side-color2: #1a4641;
+    --side-color3: #0c1117;
+    --side-color4: #47847d;
+    --side-color5: #5f908b;
+    --button-color: #26776F;
+    --button-color2: #1a4641;
+    --shadow-color: #444444;
+    --bio-btn-cancel: #bcd1cebf;
+    --bio-btn-cancel-hover: #bcd1ced9;
+    color: white;
+}
+
+#dark-mode-toggle {
+    position: absolute; 
+    top: 0; 
+    right: 0; 
+    margin-top: 10px; 
+    margin-right: 10px; 
+    padding: 3px; 
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s all;
+}
+
+#dark-mode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}

@@ -1,0 +1,26 @@
+﻿@using Chirp.Core.Services
+@using Chirp.Infrastructure.Chirp.Services
+@model Chirp.Web.Pages.UserTimelineModel
+@inject IAchievementService Service;
+
+@{
+    var achievement = await Service.GetAuthorNewestAchievementAsync(Model.AuthenticatedAuthor!.Id);
+}
+    
+<div class="achievement-card">
+    <h3 class="card-heading" style="text-align: center; margin-bottom: 14px;">Newest Achievement</h3>
+    @if (achievement == null)
+    {
+        <p style="margin: 0;">You have no achievements yet.</p>
+    }
+    else
+    {
+        <div class="achievement-container">
+            <img style="width: 110px;" src="@(achievement.ImagePath)" alt="Achievement Badge" />
+            <div>
+                <h4 class="achievement-heading">@(achievement.Title)</h4>
+                <p class="achievement-p">@achievement.Description</p>
+            </div>
+        </div>   
+    }
+</div>   

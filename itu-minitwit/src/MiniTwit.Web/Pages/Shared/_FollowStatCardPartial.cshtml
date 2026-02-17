@@ -1,0 +1,30 @@
+﻿@using Chirp.Core.Services
+@using Chirp.Web.Pages.Models
+@model Chirp.Web.Pages.Models.FollowStatCardModel
+@inject IAuthorService AuthorService
+
+@{
+    var isAboutMePage = ViewData["page"] as string == "about-me";
+    var followedList = await AuthorService.GetFollowersAsync(Model.Author.Id);
+    var followingList = await AuthorService.GetFollowingAsync(Model.Author.Id);
+}
+
+<partial name="_PopupPartial" model='new PopupModel { PopupId = "popup1", Connections = followedList }' />
+<partial name="_PopupPartial" model='new PopupModel { PopupId = "popup2", Connections = followingList }' />
+
+@if (isAboutMePage)
+{
+    <div class="followers-card">
+        <partial name="_FollowStatInfo" model='new FollowStatInfoModel { PopupId = "popup1", IsFollowedInfo = true, Connections = followedList }' />
+    </div>
+    <div class="followers-card">
+        <partial name="_FollowStatInfo" model='new FollowStatInfoModel { PopupId = "popup2", IsFollowedInfo = false, Connections = followingList }' />
+    </div>
+}
+else
+{
+    <div class="followers-card">
+        <partial name="_FollowStatInfo" model='new FollowStatInfoModel { PopupId = "popup1", IsFollowedInfo = true, Connections = followedList }' />
+        <partial name="_FollowStatInfo" model='new FollowStatInfoModel { PopupId = "popup2", IsFollowedInfo = false, Connections = followingList }' />
+    </div>
+}

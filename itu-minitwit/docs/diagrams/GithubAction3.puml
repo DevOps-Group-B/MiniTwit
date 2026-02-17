@@ -1,0 +1,40 @@
+@startuml
+title Build, Test, and Release Workflow
+
+start
+:Push or PR to 'main' branch;
+if (Is a Tagged Push?) then (Yes)
+    :Set tag from GitHub ref;
+else (No)
+    :Auto-increment Version Tag;
+    :Push new tag to repository;
+endif
+
+:Checkout Code;
+:Setup .NET Environment;
+:Restore Dependencies;
+
+:Build Solution;
+:Install Playwright CLI & Browsers;
+
+:Run Tests;
+
+if (Is a Tagged Build?) then (Yes)
+    :Publish Executables;
+    fork
+        :Create Linux Executable;
+    fork again
+        :Create Windows Executable;
+    fork again
+        :Create macOS Executable;
+    end fork
+    
+    :Create ZIP Files;
+    :Upload Release Artifacts;
+    :Create GitHub Release;
+else (No)
+    :Exit Without Release;
+endif
+
+stop
+@enduml

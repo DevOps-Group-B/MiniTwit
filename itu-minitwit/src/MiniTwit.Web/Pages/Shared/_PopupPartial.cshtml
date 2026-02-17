@@ -1,0 +1,18 @@
+﻿@model Chirp.Web.Pages.Models.PopupModel
+
+<div id="@Model.PopupId" class="overlay">
+    <div class="popup">
+        <h2>All Followers</h2>
+        <a class="close" href="#">&times;</a>
+        <div class="content">
+            <ul>
+                @foreach (var name in Model.Connections)
+                {
+                    <li>
+                        <a href="/@name" style="color: black;">@name</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

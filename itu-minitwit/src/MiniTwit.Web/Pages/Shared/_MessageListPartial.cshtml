@@ -1,0 +1,34 @@
+﻿@model Chirp.Web.Pages.Base.BaseCheepDisplayPage
+
+<ul id="messagelist" class="cheeps">
+    @foreach (var cheep in Model.Cheeps)
+    {
+        <li>
+            <div>
+                <strong>
+                    <a href="/@cheep.AuthorName">@cheep.AuthorName</a>
+                </strong>
+
+                @if (User.Identity!.IsAuthenticated && Model.AuthenticatedAuthor != null)
+                {
+                    if (Model.AuthenticatedAuthor.Name != cheep.AuthorName)
+                    {
+                        var isFollowing = Model.Follows[cheep.AuthorId];
+
+                        <form method="post" asp-page-handler="@(isFollowing ? "UnfollowAuthor" : "FollowAuthor")" style="display:inline;">
+                            <input type="hidden" name="targetAuthorId" value="@cheep.AuthorId" />
+                            <button type="submit" class="link-style-button">[@(isFollowing ? "Unfollow" : "Follow")]</button>
+                        </form>
+                    }
+                }
+
+                <p style="display:inline;">
+                    @cheep.Message
+                    <span>
+                        <small>&mdash; @cheep.Timestamp.ToString("MM/dd/yy H:mm:ss")</small>
+                    </span>
+                </p>
+            </div>
+        </li>
+    }
+</ul>
