@@ -2,7 +2,7 @@ using Chirp.Core.DTOs.Simulator;
 using Chirp.Core.Models;
 using Chirp.Core.Services;
 using Chirp.Core.Simulator;
-using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chirp.Web.Controllers;
@@ -14,12 +14,14 @@ public class SimulatorApiController : ControllerBase
     private readonly ISimulatorRepository _simRepo;
     private readonly ICheepService _cheepService;
     private readonly IAuthorService _authorService;
+    private readonly UserManager<Author> _userManager;
 
-    public SimulatorApiController(ISimulatorRepository simRepo, ICheepService cheepService, IAuthorService authorService)
+    public SimulatorApiController(ISimulatorRepository simRepo, ICheepService cheepService, IAuthorService authorService, UserManager<Author> userManager)
     {
         _simRepo = simRepo;
         _cheepService = cheepService;
         _authorService = authorService;
+        _userManager = userManager;
     }
 
     // Helper: Updates the 'latest' value if provided in the query string
@@ -65,9 +67,22 @@ public class SimulatorApiController : ControllerBase
         else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "You have to enter a valid email address";
         else if (string.IsNullOrEmpty(payload.Pwd)) error = "You have to enter a password";
         
-        // TODO: Call your actual Register logic here
-        // var result = await _userService.RegisterUser(payload.Username, payload.Email, payload.Pwd);
-        // if (!result.Success) error = result.ErrorMessage;
+        var user = new Author
+        {
+            UserName = payload.Username,
+            Email = payload.Email,
+            Name = payload.Username,
+            Cheeps = new List<Cheep>(),
+            Followers = new List<AuthorFollower>(),
+            Following = new List<AuthorFollower>()
+        };
+        
+        var result = await _userManager.CreateAsync(user, payload.Pwd);
+        
+        if (!result.Succeeded)
+        {
+            error = string.Join(", ", result.Errors.Select(e => e.Description));
+        }
 
         if (error != null)
         {
@@ -186,10 +201,16 @@ public class SimulatorApiController : ControllerBase
 
         if (!string.IsNullOrEmpty(payload.Follow))
         {
-             await _authorService.FollowAuthorAsync(user.Name, payload.Follow);
+            var userToFollow = await _authorService.GetAuthorByNameAsync(payload.Follow);
+            if (userToFollow == null) return NotFound();
+            
+            await _authorService.FollowAuthorAsync(user.Name, payload.Follow);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
+            var userToUnfollow = await _authorService.GetAuthorByNameAsync(payload.Unfollow);
+            if (userToUnfollow == null) return NotFound();
+            
             await _authorService.UnfollowAuthorAsync(user.Name, payload.Unfollow);
         }
 
