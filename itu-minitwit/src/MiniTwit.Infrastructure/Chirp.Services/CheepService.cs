@@ -29,6 +29,11 @@ public class CheepService : ICheepService
         return await _cheepRepository.GetCheepsFromAuthorAsync(page, authorId);
     }
 
+    public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAmountAsync(int numberOfCheeps, string authorId)
+    {
+        return await _cheepRepository.GetCheepsFromAuthorAmountAsync(numberOfCheeps, authorId);
+    }
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromUserTimelineAsync(int page, string authorId)
     {
         return await _cheepRepository.GetCheepsFromUserTimelineAsync(page, authorId);

@@ -1,6 +1,7 @@
 using Chirp.Core.Models;
 using Chirp.Core.Repositories;
 using Chirp.Core.Services;
+using Chirp.Core.Simulator;
 using Chirp.Infrastructure;
 using Chirp.Infrastructure.Chirp.Repositories;
 using Chirp.Infrastructure.Chirp.Services;
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<ICheepService, CheepService>();
 builder.Services.AddScoped<IAchievementService, AchievementService>();
+builder.Services.AddScoped<ISimulatorRepository, SimulatorRepository>();
 
 var clientId = builder.Configuration["authentication_github_clientId"];
 var clientSecret = builder.Configuration["authentication_github_clientSecret"];
