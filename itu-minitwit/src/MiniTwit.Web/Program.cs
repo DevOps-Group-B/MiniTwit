@@ -35,7 +35,15 @@ string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combin
 
 builder.Services.AddDbContext<ChirpDBContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 
-builder.Services.AddDefaultIdentity<Author>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<ChirpDBContext>();
+builder.Services.AddDefaultIdentity<Author>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 1;
+    options.Password.RequiredUniqueChars = 0;
+}).AddEntityFrameworkStores<ChirpDBContext>();
 
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
 builder.Services.AddScoped<ICheepRepository, CheepRepository>();
