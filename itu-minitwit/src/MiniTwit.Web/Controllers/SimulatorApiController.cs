@@ -140,8 +140,6 @@ public class SimulatorApiController : ControllerBase
         
         var user = await _authorService.GetAuthorByNameAsync(username);
         if (user == null) return NotFound();
-        
-        // await _messageService.CreateMessage(user.Id, payload.Content);
 
         var cheep = new Cheep
         {
