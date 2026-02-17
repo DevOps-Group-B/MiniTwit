@@ -2,7 +2,7 @@
 
 ## Docker
 
-### Setup
+### Local Setup
 
 ```bash
 cd itu-minitwit/
@@ -20,4 +20,20 @@ docker start minitwit
 
 ```bash
 docker stop minitwit
+```
+
+### Deploy Setup
+Firstly:
+```bash
+git clone https://github.com/DevOps-Group-B/MiniTwit.git
+```
+
+Then setup Environment for the following:
+- SSH_KEY_NAME
+- SSH_KEY_PATH
+- DIGITAL_OCEAN_TOKEN
+
+Lastly run the command:
+```bash
+vagrant up
 ```
