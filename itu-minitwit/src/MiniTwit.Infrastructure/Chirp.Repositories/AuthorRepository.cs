@@ -100,6 +100,16 @@ public class AuthorRepository : IAuthorRepository
         return await query.ToListAsync();
     }
     
+    public async Task<List<string>> GetFollowingAmountAsync(int numberOfFollowing, string authorId)
+    {
+        var query = (
+            from a in _dbContext.AuthorFollowers
+            where a.FollowerId == authorId
+            select a.Following.Name);
+        
+        return await query.Take(numberOfFollowing).ToListAsync();
+    }
+    
     public async Task<List<string>> GetFollowersAsync(string authorId)
     {
         var query = (

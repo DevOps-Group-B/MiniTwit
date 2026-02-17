@@ -1,6 +1,7 @@
 using Chirp.Core.Models;
 using Chirp.Core.Repositories;
 using Chirp.Core.Services;
+using Chirp.Core.Simulator;
 using Chirp.Infrastructure;
 using Chirp.Infrastructure.Chirp.Repositories;
 using Chirp.Infrastructure.Chirp.Services;
@@ -23,6 +24,7 @@ if (builder.Environment.IsDevelopment())
 }
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 /*
   The database path is set to the environment variable CHIRPDBPATH.
@@ -33,7 +35,15 @@ string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combin
 
 builder.Services.AddDbContext<ChirpDBContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 
-builder.Services.AddDefaultIdentity<Author>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<ChirpDBContext>();
+builder.Services.AddDefaultIdentity<Author>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 1;
+    options.Password.RequiredUniqueChars = 0;
+}).AddEntityFrameworkStores<ChirpDBContext>();
 
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
 builder.Services.AddScoped<ICheepRepository, CheepRepository>();
@@ -41,6 +51,7 @@ builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<ICheepService, CheepService>();
 builder.Services.AddScoped<IAchievementService, AchievementService>();
+builder.Services.AddScoped<ISimulatorRepository, SimulatorRepository>();
 
 var clientId = builder.Configuration["authentication_github_clientId"];
 var clientSecret = builder.Configuration["authentication_github_clientSecret"];
@@ -80,6 +91,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers();
 
 /*
   This is a custom redirect policy for the /Register and /Login page
