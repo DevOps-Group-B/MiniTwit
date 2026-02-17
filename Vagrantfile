@@ -6,10 +6,10 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :digital_ocean do |provider, override|
     # Ensure you have exported DO_TOKEN in your shell before running vagrant up
-    provider.token = ENV['DO_TOKEN']
+    provider.token = ENV['DIGITAL_OCEAN_TOKEN']
 
     # Path to your private SSH key
-    override.ssh.private_key_path = '~/.ssh/id_rsa'
+    override.ssh.private_key_path = ENV['SSH_KEY_PATH']
     override.vm.box = 'digital_ocean'
 
     provider.image = 'ubuntu-22-04-x64'
