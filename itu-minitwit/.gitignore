@@ -106,6 +106,5 @@ fabric.properties
 /src/Chirp.CSVDBService/data/database.csv
 
 #Private Environment files
-.env.ps1
-.env
-.vagrant/
+.env*
+.vagrant*
