@@ -204,14 +204,14 @@ public class SimulatorApiController : ControllerBase
             var userToFollow = await _authorService.GetAuthorByNameAsync(payload.Follow);
             if (userToFollow == null) return NotFound();
             
-            await _authorService.FollowAuthorAsync(user.Name, payload.Follow);
+            await _authorService.FollowAuthorAsync(user.Id, userToFollow.Id);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
             var userToUnfollow = await _authorService.GetAuthorByNameAsync(payload.Unfollow);
             if (userToUnfollow == null) return NotFound();
             
-            await _authorService.UnfollowAuthorAsync(user.Name, payload.Unfollow);
+            await _authorService.UnfollowAuthorAsync(user.Id, userToUnfollow.Id);
         }
 
         return NoContent();

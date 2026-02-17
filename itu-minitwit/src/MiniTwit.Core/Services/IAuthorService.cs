@@ -9,8 +9,8 @@ public interface IAuthorService
 {
     public Task<AuthorDTO?> GetAuthorByNameAsync(string name);
     public Task<AuthorDTO?> GetAuthorByEmailAsync(string email);
-    public Task FollowAuthorAsync(string currentAuthorName, string targetAuthorName);
-    public Task UnfollowAuthorAsync(string currentAuthorName, string targetAuthorName);
+    public Task FollowAuthorAsync(string currentAuthorId, string targetAuthorId);
+    public Task UnfollowAuthorAsync(string currentAuthorId, string targetAuthorId);
     public Task<bool> IsFollowingAsync(string currentAuthorId, string targetAuthorId);
     public Task<List<string>> GetFollowingAsync(string authorId);
     public Task<List<string>> GetFollowingAmountAsync(int numberOfFollowing, string authorId);
