@@ -17,6 +17,7 @@ public class ChirpDBContext : IdentityDbContext<Author>
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<AuthorFollower> AuthorFollowers { get; set; }
     public DbSet<AuthorAchievement> AuthorAchievements { get; set; }
+    public DbSet<LatestEntity> Latest { get; set; }
     
     public ChirpDBContext(DbContextOptions<ChirpDBContext> options) : base(options)
     {}

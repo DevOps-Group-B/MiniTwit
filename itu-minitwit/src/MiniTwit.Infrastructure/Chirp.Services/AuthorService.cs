@@ -45,6 +45,10 @@ public class AuthorService : IAuthorService
         return await _authorRepository.GetFollowingAsync(authorId);
     }
     
+    public async Task<List<string>> GetFollowingAmountAsync(int numberOfFollowing, string authorId){
+        return await _authorRepository.GetFollowingAmountAsync(numberOfFollowing, authorId);
+    }
+    
     public async Task<List<string>> GetFollowersAsync(string authorId){
         return await _authorRepository.GetFollowersAsync(authorId);
     }

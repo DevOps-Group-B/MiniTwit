@@ -23,10 +23,20 @@ public class CheepService : ICheepService
     {
         return await _cheepRepository.GetCheepsAsync(page);
     }
+    
+    public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAmountAsync(int numberOfCheeps)
+    {
+        return await _cheepRepository.GetCheepsAmountAsync(numberOfCheeps);
+    }
 
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAsync(int page, string authorId)
     {
         return await _cheepRepository.GetCheepsFromAuthorAsync(page, authorId);
+    }
+
+    public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAmountAsync(int numberOfCheeps, string authorId)
+    {
+        return await _cheepRepository.GetCheepsFromAuthorAmountAsync(numberOfCheeps, authorId);
     }
 
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromUserTimelineAsync(int page, string authorId)
