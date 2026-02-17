@@ -1,4 +1,5 @@
 using Chirp.Core.DTOs.Simulator;
+using Chirp.Core.Models;
 using Chirp.Core.Services;
 using Chirp.Core.Simulator;
 using Microsoft.AspNetCore.Identity.Data;
@@ -87,21 +88,18 @@ public class SimulatorApiController : ControllerBase
         
         if (!IsAuthorized()) 
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-
-        // TODO: Fetch messages from your service/repo
-        // var messages = await _messageService.GetPublicMessages(no);
         
-        // TODO: Map your internal entities to the Simulator DTOs
+        var (messages, _) = await _cheepService.GetCheepsAmountAsync(no);
+
         var dtos = new List<MessageDTO>();
-        /*
+        
         foreach(var m in messages) {
-            dtos.Add(new Message {
-                Content = m.Text,
-                PubDate = m.PubDate.ToString(), // Or specific format
-                User = m.Author.Username
+            dtos.Add(new MessageDTO {
+                Content = m.Message,
+                PubDate = m.Timestamp.ToString(),
+                User = m.AuthorName
             });
         }
-        */
         
         return Ok(dtos); 
     }
@@ -113,16 +111,21 @@ public class SimulatorApiController : ControllerBase
         
         if (!IsAuthorized()) 
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-
-        // TODO: Check if user exists
-        // var user = await _userService.GetByUsername(username);
-        // if (user == null) return NotFound();
-
-        // TODO: Fetch user messages
-        // var messages = await _messageService.GetMessagesByUser(user.Id, no);
-
-        // TODO: Map to DTOs
-        var dtos = new List<MessageDTO>(); 
+        
+        var user = await _authorService.GetAuthorByNameAsync(username);
+        if (user == null) return NotFound();
+        
+        var (messages, _) = await _cheepService.GetCheepsFromAuthorAmountAsync(no, user.Id);
+        
+        var dtos = new List<MessageDTO>();
+        
+        foreach(var m in messages) {
+            dtos.Add(new MessageDTO {
+                Content = m.Message,
+                PubDate = m.Timestamp.ToString(),
+                User = m.AuthorName
+            });
+        }
 
         return Ok(dtos);
     }
@@ -134,12 +137,20 @@ public class SimulatorApiController : ControllerBase
         
         if (!IsAuthorized()) 
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-
-        // TODO: Get user and create message
-        // var user = await _userService.GetByUsername(username);
-        // if (user == null) return NotFound();
+        
+        var user = await _authorService.GetAuthorByNameAsync(username);
+        if (user == null) return NotFound();
         
         // await _messageService.CreateMessage(user.Id, payload.Content);
+
+        var cheep = new Cheep
+        {
+            Text = payload.Content,
+            AuthorId = user.Id,
+            TimeStamp = DateTime.Now
+        };
+        
+        await _cheepService.PostCheepAsync(cheep);
 
         return NoContent(); // 204 No Content
     }

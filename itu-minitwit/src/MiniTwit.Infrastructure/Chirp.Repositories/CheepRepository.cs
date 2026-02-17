@@ -37,6 +37,24 @@ public class CheepRepository : ICheepRepository
         
         return (await query.Skip((page*32)-32).Take(32).ToListAsync(), await query.CountAsync());
     }
+    
+    public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAmountAsync(int numberOfCheeps)
+    {
+        var query =
+            from c in _dbContext.Cheeps
+            join a in _dbContext.Authors 
+                on c.AuthorId equals a.Id
+            orderby c.TimeStamp descending
+            select new CheepDTO
+            {
+                AuthorId = c.AuthorId,
+                AuthorName = a.Name,
+                Message = c.Text,
+                Timestamp = c.TimeStamp
+            };
+        
+        return (await query.Take(numberOfCheeps).ToListAsync(), await query.CountAsync());
+    }
 
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAsync(int page, string authorId)
     {

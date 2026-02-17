@@ -24,6 +24,7 @@ if (builder.Environment.IsDevelopment())
 }
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 /*
   The database path is set to the environment variable CHIRPDBPATH.
@@ -82,6 +83,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers();
 
 /*
   This is a custom redirect policy for the /Register and /Login page
