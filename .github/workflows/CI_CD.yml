@@ -19,7 +19,7 @@ permissions:
   contents: write   # needed for creating tags/releases
 
 env:
-  IMAGE_NAME: minitwit-webserver
+  IMAGE_NAME: minitwitimage
   CONTAINER_NAME: minitwit
   APP_PORT: "5273"
   HOST_PORT: "80"
