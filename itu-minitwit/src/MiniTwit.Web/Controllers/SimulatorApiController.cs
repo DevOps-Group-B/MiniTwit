@@ -61,35 +61,37 @@ public class SimulatorApiController : ControllerBase
     {
         await UpdateLatest(latest);
 
-        string error = null;
+        string? error = null;
 
-        if (string.IsNullOrEmpty(payload.Username)) error = "You have to enter a username";
-        else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "You have to enter a valid email address";
-        else if (string.IsNullOrEmpty(payload.Pwd)) error = "You have to enter a password";
+        if (string.IsNullOrEmpty(payload.Username)) error = "missing username";
+        else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "invalid email";
+        else if (string.IsNullOrEmpty(payload.Pwd)) error = "password missing";
+        else if (await _authorService.GetAuthorByNameAsync(payload.Username) != null) error = "username already taken";
+        
+        if (error != null)
+        {
+            return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
+        }
         
         var user = new Author
         {
             UserName = payload.Username,
             Email = payload.Email,
-            Name = payload.Username,
+            Name = payload.Username!,
             Cheeps = new List<Cheep>(),
             Followers = new List<AuthorFollower>(),
             Following = new List<AuthorFollower>()
         };
         
-        var result = await _userManager.CreateAsync(user, payload.Pwd);
+        var result = await _userManager.CreateAsync(user, payload.Pwd!);
         
-        if (!result.Succeeded)
+        if (result.Succeeded)
         {
-            error = string.Join(", ", result.Errors.Select(e => e.Description));
+            return NoContent(); // 204 No Content
         }
-
-        if (error != null)
-        {
-            return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
-        }
-
-        return NoContent(); // 204 No Content
+        
+        error = string.Join(", ", result.Errors.Select(e => e.Description));
+        return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
     }
 
     // -------------------------------------------------------------------

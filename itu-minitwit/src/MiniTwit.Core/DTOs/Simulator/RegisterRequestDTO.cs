@@ -5,11 +5,11 @@ namespace Chirp.Core.DTOs.Simulator;
 public class RegisterRequestDTO
 {
     [JsonPropertyName("username")]
-    public string Username { get; set; }
+    public string? Username { get; set; }
 
     [JsonPropertyName("email")]
-    public string Email { get; set; }
+    public string? Email { get; set; }
 
     [JsonPropertyName("pwd")]
-    public string Pwd { get; set; }
+    public string? Pwd { get; set; }
 }
