@@ -119,7 +119,9 @@ using (var scope = app.Services.CreateScope())
     using var context = scope.ServiceProvider.GetService<ChirpDBContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Author>>();
     if (context == null) return;
-    if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabase(context, userManager);
+    if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabaseAchievements(context);
+    // Replace with line above to seed the database with dummy-data
+    // if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabase(context, userManager);
 }
 
 //The tests use the instead of a delay to know when the server is ready

@@ -61,35 +61,37 @@ public class SimulatorApiController : ControllerBase
     {
         await UpdateLatest(latest);
 
-        string error = null;
+        string? error = null;
 
-        if (string.IsNullOrEmpty(payload.Username)) error = "You have to enter a username";
-        else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "You have to enter a valid email address";
-        else if (string.IsNullOrEmpty(payload.Pwd)) error = "You have to enter a password";
+        if (string.IsNullOrEmpty(payload.Username)) error = "missing username";
+        else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "invalid email";
+        else if (string.IsNullOrEmpty(payload.Pwd)) error = "password missing";
+        else if (await _authorService.GetAuthorByNameAsync(payload.Username) != null) error = "username already taken";
+        
+        if (error != null)
+        {
+            return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
+        }
         
         var user = new Author
         {
             UserName = payload.Username,
             Email = payload.Email,
-            Name = payload.Username,
+            Name = payload.Username!,
             Cheeps = new List<Cheep>(),
             Followers = new List<AuthorFollower>(),
             Following = new List<AuthorFollower>()
         };
         
-        var result = await _userManager.CreateAsync(user, payload.Pwd);
+        var result = await _userManager.CreateAsync(user, payload.Pwd!);
         
-        if (!result.Succeeded)
+        if (result.Succeeded)
         {
-            error = string.Join(", ", result.Errors.Select(e => e.Description));
+            return NoContent(); // 204 No Content
         }
-
-        if (error != null)
-        {
-            return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
-        }
-
-        return NoContent(); // 204 No Content
+        
+        error = string.Join(", ", result.Errors.Select(e => e.Description));
+        return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
     }
 
     // -------------------------------------------------------------------
@@ -111,7 +113,7 @@ public class SimulatorApiController : ControllerBase
         foreach(var m in messages) {
             dtos.Add(new MessageDTO {
                 Content = m.Message,
-                PubDate = m.Timestamp.ToString(),
+                PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
             });
         }
@@ -128,7 +130,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
         
         var (messages, _) = await _cheepService.GetCheepsFromAuthorAmountAsync(no, user.Id);
         
@@ -137,7 +139,7 @@ public class SimulatorApiController : ControllerBase
         foreach(var m in messages) {
             dtos.Add(new MessageDTO {
                 Content = m.Message,
-                PubDate = m.Timestamp.ToString(),
+                PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
             });
         }
@@ -154,7 +156,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
 
         var cheep = new Cheep
         {
@@ -181,7 +183,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
         
         var followingNames = await _authorService.GetFollowingAmountAsync(no, user.Id);
         
@@ -197,19 +199,19 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
 
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
 
         if (!string.IsNullOrEmpty(payload.Follow))
         {
             var userToFollow = await _authorService.GetAuthorByNameAsync(payload.Follow);
-            if (userToFollow == null) return NotFound();
+            if (userToFollow == null) return StatusCode(404, string.Empty);
             
             await _authorService.FollowAuthorAsync(user.Id, userToFollow.Id);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
             var userToUnfollow = await _authorService.GetAuthorByNameAsync(payload.Unfollow);
-            if (userToUnfollow == null) return NotFound();
+            if (userToUnfollow == null) return StatusCode(404, string.Empty);
             
             await _authorService.UnfollowAuthorAsync(user.Id, userToUnfollow.Id);
         }

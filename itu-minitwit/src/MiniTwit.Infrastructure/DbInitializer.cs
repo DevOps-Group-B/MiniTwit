@@ -780,4 +780,22 @@ public static class DbInitializer
             await userManager.CreateAsync(a12, "M32Want_Access");
         }
     }
+    
+    public static async Task SeedDatabaseAchievements(ChirpDBContext chirpContext)
+    {
+        if (!chirpContext.Achievements.Any())
+        {
+            Achievement ach1 = new Achievement() { AchievementId = 1, Title = "Rookie Chirper", Description = "Welcome aboard! You signed up successfully to Chirp", ImagePath = "/images/Badges/Signup-badge.png" };
+            Achievement ach2 = new Achievement() { AchievementId = 2, Title = "Novice Cheepster", Description = "Congratulations! You created your first Cheep.", ImagePath = "/images/Badges/First-cheep-badge.png" };
+            Achievement ach3 = new Achievement() { AchievementId = 3, Title = "Branching Out", Description = "You followed your first Chirper. Every great tree starts with a single branch.", ImagePath = "/images/Badges/First-following-badge.png" };
+            Achievement ach4 = new Achievement() { AchievementId = 4, Title = "Social Magnet", Description = "Someone followed you. You must be cheeping some good stuff", ImagePath = "/images/Badges/First-follower-badge.png" };
+            
+            chirpContext.Achievements.Add(ach1);
+            chirpContext.Achievements.Add(ach2);
+            chirpContext.Achievements.Add(ach3);
+            chirpContext.Achievements.Add(ach4);
+
+            await chirpContext.SaveChangesAsync();
+        }
+    }
 }
