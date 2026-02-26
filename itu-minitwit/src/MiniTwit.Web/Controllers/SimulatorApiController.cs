@@ -130,7 +130,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
         
         var (messages, _) = await _cheepService.GetCheepsFromAuthorAmountAsync(no, user.Id);
         
@@ -156,7 +156,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
 
         var cheep = new Cheep
         {
@@ -183,7 +183,7 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
         
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
         
         var followingNames = await _authorService.GetFollowingAmountAsync(no, user.Id);
         
@@ -199,19 +199,19 @@ public class SimulatorApiController : ControllerBase
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
 
         var user = await _authorService.GetAuthorByNameAsync(username);
-        if (user == null) return NotFound();
+        if (user == null) return StatusCode(404, string.Empty);
 
         if (!string.IsNullOrEmpty(payload.Follow))
         {
             var userToFollow = await _authorService.GetAuthorByNameAsync(payload.Follow);
-            if (userToFollow == null) return NotFound();
+            if (userToFollow == null) return StatusCode(404, string.Empty);
             
             await _authorService.FollowAuthorAsync(user.Id, userToFollow.Id);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
             var userToUnfollow = await _authorService.GetAuthorByNameAsync(payload.Unfollow);
-            if (userToUnfollow == null) return NotFound();
+            if (userToUnfollow == null) return StatusCode(404, string.Empty);
             
             await _authorService.UnfollowAuthorAsync(user.Id, userToUnfollow.Id);
         }
