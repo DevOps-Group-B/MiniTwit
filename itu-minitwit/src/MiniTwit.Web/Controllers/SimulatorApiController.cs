@@ -111,7 +111,7 @@ public class SimulatorApiController : ControllerBase
         foreach(var m in messages) {
             dtos.Add(new MessageDTO {
                 Content = m.Message,
-                PubDate = m.Timestamp.ToString(),
+                PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
             });
         }
@@ -137,7 +137,7 @@ public class SimulatorApiController : ControllerBase
         foreach(var m in messages) {
             dtos.Add(new MessageDTO {
                 Content = m.Message,
-                PubDate = m.Timestamp.ToString(),
+                PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
             });
         }
