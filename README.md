@@ -37,8 +37,10 @@ docker run -d \
   -e CHIRPDBPATH=/app/data/minitwit.db \
   minitwit/webserver
 
-  
-  ### Required GitHub Secrets
+
+
+
+### 3. Required GitHub Secrets
 To enable successful deployments, the following secrets must be configured in the repository:
 
 * **`SSH_HOST`**: The IP address of the production server.

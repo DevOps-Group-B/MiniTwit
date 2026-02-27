@@ -83,6 +83,8 @@ jobs:
       # --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }} 
         with:
           playbook: ansible/playbook.yml
           directory: ./
