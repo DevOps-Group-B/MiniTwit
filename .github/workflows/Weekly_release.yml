@@ -19,11 +19,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      
       - name: Generate Release Tag
         id: tag
         run: |
-          LATEST_TAG=$(git tag --list 'prod-*' | sed 's/prod-//' | sort -n | tail -1)
+          # Extract just the number from tags like 'prod-6' or 'prod-6-2be86cf'
+          LATEST_TAG=$(git tag --list 'prod-*' | sed 's/prod-//' | grep -oE '^[0-9]+' | sort -n | tail -1)
           if [ -z "$LATEST_TAG" ]; then
             NEXT_VERSION=1
           else
