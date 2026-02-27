@@ -84,6 +84,10 @@
     volumes:
       - "{{ db_volume }}:/app/data"
     env:
-      CHIRPDBPATH: /app/data/minitwit.db
+      CHIRPDBPATH: "/app/data/minitwit.db"
 
-- name: Cleanup dangling
+- name: Cleanup dangling images
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      dangling: true
