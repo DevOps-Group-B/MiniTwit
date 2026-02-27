@@ -5,16 +5,12 @@
 
 
 name: Weekly Release
-
 on:
   schedule:
-    # Runs at 11:59 on Friday
     - cron: '59 11 * * 5'
-  workflow_dispatch: # Allows you to run it manually if you want to test it
-
+  workflow_dispatch:
 permissions:
   contents: write
-
 jobs:
   create_weekly_release:
     runs-on: ubuntu-latest
@@ -22,12 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Important: Fetch full history so we can read git logs
+          fetch-depth: 0
 
       - name: Generate Release Tag
         id: tag
         run: |
-          # Find the latest tag matching 'prod-N'
           LATEST_TAG=$(git tag --list 'prod-*' | sed 's/prod-//' | sort -n | tail -1)
           if [ -z "$LATEST_TAG" ]; then
             NEXT_VERSION=1
@@ -37,15 +32,19 @@ jobs:
           TAG_NAME="prod-${NEXT_VERSION}"
           echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ steps.tag.outputs.tag }}
+          git push origin ${{ steps.tag.outputs.tag }}
+
       - name: Generate Release Notes
         id: notes
         run: |
-          # Get commit messages from the last 7 days
           echo "## Weekly Changes (${{ steps.tag.outputs.tag }})" > release_notes.md
           echo "" >> release_notes.md
           git log --oneline --since="7 days ago" >> release_notes.md
-          
-          # Check if the file is empty (if no commits in 7 days)
           if [ ! -s release_notes.md ]; then
             echo "No changes in the last 7 days." > release_notes.md
           fi
