@@ -25,20 +25,22 @@ To start a local Ubuntu VM that mimics our production server on your own machine
 ### 2. Manual Docker (Quick Start)
 If you wish to run the container directly on your host machine without the Vagrant VM:
 
-```bash
 # Build the image locally
+```bash
 docker build -t minitwit/webserver ./itu-minitwit
-
+```
 # Run with persistent volume mapping
+```bash
+
 docker run -d \
   -p 5273:5273 \
   --name minitwit \
   -v minitwit_db_volume:/app/data \
   -e CHIRPDBPATH=/app/data/minitwit.db \
   minitwit/webserver
-
-  
-  ### Required GitHub Secrets
+```
+---
+### Required GitHub Secrets
 To enable successful deployments, the following secrets must be configured in the repository:
 
 * **`SSH_HOST`**: The IP address of the production server.
