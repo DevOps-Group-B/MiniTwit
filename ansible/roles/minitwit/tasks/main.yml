@@ -18,6 +18,11 @@
   ansible.builtin.file:
     path: /usr/share/keyrings/docker-archive-keyring.gpg
     state: absent
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
     
 - name: Install prerequisite packages
   ansible.builtin.apt:
@@ -28,11 +33,6 @@
 - name: Install Docker SDK for Python
   ansible.builtin.pip:
     name: docker
-
-- name: Add Docker GPG key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
