@@ -30,7 +30,7 @@ public class IntegrationTest : IClassFixture<IntegrationTestFixture<Program>>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
     
-        Assert.Contains("Chirp!", content);
+        Assert.Contains("MiniTwit!", content);
         Assert.Contains("Public Timeline", content);   
     }
     
@@ -57,7 +57,7 @@ public class IntegrationTest : IClassFixture<IntegrationTestFixture<Program>>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
     
-        Assert.Contains("Chirp!", content);
+        Assert.Contains("MiniTwit!", content);
         Assert.Contains($"{authorName}'s Timeline", content);
     }
 
