@@ -1,0 +1,15 @@
+- name: Provision and deploy MiniTwit
+  hosts: minitwit_servers
+  become: true
+
+  vars:
+    image_name: "minitwitimage"
+    container_name: "minitwit"
+    app_port: "5273"
+    host_port: "80"
+    db_volume: "minitwit_db_volume"
+    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
+    image_tag: "{{ lookup('env', 'GITHUB_RUN_NUMBER') | default('latest') }}"
+
+  roles:
+    - minitwit
