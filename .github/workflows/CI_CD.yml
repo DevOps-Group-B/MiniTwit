@@ -80,33 +80,15 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
-      # --- STAGE 4: SERVER DEPLOYMENT ---
-      - name: Deploy via SSH (docker run)
-        uses: appleboy/ssh-action@v1.2.0
+      # --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
+      - name: Run Ansible Playbook
+        uses: dawidd6/action-ansible-playbook@v2
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          playbook: ansible/playbook.yml
+          directory: ./
+          inventory: |
+            [minitwit_servers]
+            server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          script: |
-            set -euo pipefail
-            
-            # 1. Authenticate and pull the newly built image
-            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
-            docker pull "${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}"
-
-            # 2. Stop and remove the old container
-            docker rm -f "${{ env.CONTAINER_NAME }}" || true
-
-            # 3. Ensure the Managed Docker Volume exists to keep the SQLite database safe
-            docker volume create minitwit_db_volume || true
-
-            # 4. Run the new container with the volume (-v) and environment variable (-e)
-            docker run -d --restart always \
-              -p "${{ env.HOST_PORT }}:${{ env.APP_PORT }}" \
-              --name "${{ env.CONTAINER_NAME }}" \
-              -v minitwit_db_volume:/app/data \
-              -e CHIRPDBPATH=/app/data/minitwit.db \
-              "${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}"
-
-            # 5. Clean up old, unused images to save disk space on the DigitalOcean droplet
-            docker image prune -f || true
+          options: |
+            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }}"
