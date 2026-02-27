@@ -50,6 +50,7 @@ jobs:
 
       # Playwright requires actual browser binaries to run E2E tests in the headless Ubuntu runner
       - name: Install Playwright Browsers
+        working-directory: itu-minitwit
         run: |
           dotnet tool install --global Microsoft.Playwright.CLI
           playwright install --with-deps chromium
