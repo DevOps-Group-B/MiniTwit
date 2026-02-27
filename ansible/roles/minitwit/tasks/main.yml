@@ -1,4 +1,14 @@
 ---
+- name: Remove legacy Docker repository entry
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    state: absent
+
+- name: Remove legacy Docker GPG key file
+  ansible.builtin.file:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+    state: absent
+    
 - name: Install prerequisite packages
   ansible.builtin.apt:
     name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip]
@@ -16,7 +26,7 @@
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
     state: present
 
 - name: Install Docker CE
