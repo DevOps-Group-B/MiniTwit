@@ -1,5 +1,6 @@
+---
 - name: Provision and deploy MiniTwit
-  hosts: minitwit_servers
+  hosts: all
   become: true
 
   vars:
@@ -8,8 +9,9 @@
     app_port: "5273"
     host_port: "80"
     db_volume: "minitwit_db_volume"
-    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
-    image_tag: "{{ lookup('env', 'GITHUB_RUN_NUMBER') | default('latest') }}"
+    # These fall back to 'latest' if run locally via Vagrant
+    dockerhub_user: "{{ dockerhub_username | default('your_dockerhub_id') }}"
+    app_version: "{{ image_tag | default('latest') }}"
 
   roles:
     - minitwit

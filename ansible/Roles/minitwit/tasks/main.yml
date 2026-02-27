@@ -1,0 +1,56 @@
+---
+- name: Install prerequisite packages
+  ansible.builtin.apt:
+    name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip]
+    state: present
+    update_cache: true
+
+- name: Install Docker SDK for Python
+  ansible.builtin.pip:
+    name: docker
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: [docker-ce, docker-ce-cli, containerd.io]
+    state: present
+
+- name: Ensure Docker volume exists
+  community.docker.docker_volume:
+    name: "{{ db_volume }}"
+    state: present
+
+- name: Log in to Docker Hub
+  community.docker.docker_login:
+    username: "{{ dockerhub_user }}"
+    password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+  when: lookup('env', 'DOCKERHUB_TOKEN') != ""
+
+- name: Pull and Run MiniTwit Container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
+    state: started
+    restart_policy: always
+    recreate: true
+    ports:
+      - "{{ host_port }}:{{ app_port }}"
+    volumes:
+      - "{{ db_volume }}:/app/data"
+    env:
+      CHIRPDBPATH: /app/data/minitwit.db
+
+- name: Cleanup dangling images
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      dangling: true
