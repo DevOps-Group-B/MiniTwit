@@ -1,0 +1,62 @@
+# Summary of this workflow:
+# This action runs every Friday at 11:59 or can be triggered manually.
+# It checks out the repository, generates a new incrementing release tag (prod-N), and collects commit messages from the past week.
+# Then it creates a GitHub release with the new tag and release notes summarizing the week’s changes.
+
+
+name: Weekly Release
+
+on:
+  schedule:
+    # Runs at 11:59 on Friday
+    - cron: '59 11 * * 5'
+  workflow_dispatch: # Allows you to run it manually if you want to test it
+
+permissions:
+  contents: write
+
+jobs:
+  create_weekly_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important: Fetch full history so we can read git logs
+
+      - name: Generate Release Tag
+        id: tag
+        run: |
+          # Find the latest tag matching 'prod-N'
+          LATEST_TAG=$(git tag --list 'prod-*' | sed 's/prod-//' | sort -n | tail -1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_VERSION=1
+          else
+            NEXT_VERSION=$((LATEST_TAG + 1))
+          fi
+          TAG_NAME="prod-${NEXT_VERSION}"
+          echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Generate Release Notes
+        id: notes
+        run: |
+          # Get commit messages from the last 7 days
+          echo "## Weekly Changes (${{ steps.tag.outputs.tag }})" > release_notes.md
+          echo "" >> release_notes.md
+          git log --oneline --since="7 days ago" >> release_notes.md
+          
+          # Check if the file is empty (if no commits in 7 days)
+          if [ ! -s release_notes.md ]; then
+            echo "No changes in the last 7 days." > release_notes.md
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

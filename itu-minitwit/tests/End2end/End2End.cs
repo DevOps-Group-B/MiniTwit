@@ -203,15 +203,46 @@ namespace Chirp.Tests
         [Test, Order(8)]
         public async Task Test_follow_author()
         {
-            // Navigate to the user timeline page of the author to follow
-            var authorToFollow = "Jacqualine Gilcoine";
-            var authorTimeline = new Uri(client.BaseAddress!, "/" + authorToFollow);
+            //Temp fix for these 2 tests, just create new user, not rely on existing DB Jackeline..
+            
+            // 1. Logout current user (End2EndUser)
+            await page.GotoAsync(new Uri(client.BaseAddress!, "").ToString());
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // 2. Register DummyUser
+            await page.GotoAsync(new Uri(client.BaseAddress!, "/Identity/Account/Register").ToString());
+            await page.FillAsync("input[name='Input.Name']", "DummyUser");
+            await page.FillAsync("input[name='Input.Email']", "dummy@example.com");
+            await page.FillAsync("input[name='Input.Password']", "Dummy1234!");
+            await page.FillAsync("input[name='Input.ConfirmPassword']", "Dummy1234!");
+            await page.ClickAsync("button[type='submit'][id='registerSubmit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // 3. Post a cheep as DummyUser (This guarantees the Follow button renders!)
+            await page.FillAsync("input[name='FormData.Message']", "Dummy cheep!");
+            await page.ClickAsync("input[type='submit']");
+            await page.WaitForSelectorAsync("text=Dummy cheep!");
+
+            // 4. Logout DummyUser
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // 5. Log back in as original End2EndUser
+            await page.GotoAsync(new Uri(client.BaseAddress!, "/Identity/Account/Login").ToString());
+            await page.FillAsync("input[name='Input.Email']", email);
+            await page.FillAsync("input[name='Input.Password']", password);
+            await page.ClickAsync("button[type='submit'][id='login-submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // --- END SETUP ---
+
+            // Navigate to DummyUser's timeline
+            var authorTimeline = new Uri(client.BaseAddress!, "/DummyUser");
             await page.GotoAsync(authorTimeline.ToString());
 
             // Click the follow button
             await page.ClickAsync("button:has-text('[Follow]')");
-
-            // Wait for the follow action to complete
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Verify the follow action
@@ -228,15 +259,12 @@ namespace Chirp.Tests
         [Test, Order(9)]
         public async Task Test_unfollow_author()
         {
-            // Navigate to the user timeline page of the author to unfollow
-            var authorToUnfollow = "Jacqualine Gilcoine";
-            var authorTimeline = new Uri(client.BaseAddress!, "/" + authorToUnfollow);
+            // Navigate to DummyUser's timeline
+            var authorTimeline = new Uri(client.BaseAddress!, "/DummyUser");
             await page.GotoAsync(authorTimeline.ToString());
 
             // Click the unfollow button
             await page.ClickAsync("button:has-text('[Unfollow]')");
-
-            // Wait for the unfollow action to complete
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Verify the unfollow action
