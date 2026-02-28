@@ -7,30 +7,27 @@ using Chirp.Infrastructure.Chirp.Repositories;
 using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
-
-/// <summary>
-/// Program class is the entry point for the Chirp application.
-/// It sets up the services for the application and sets up the database.
-/// It also sets up the authentication with GitHub and other middleware.
-/// </summary>
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add user secrets
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
 }
-// Add services to the container.
+
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
-/*
-  The database path is set to the environment variable CHIRPDBPATH.
-  If the environment variable is not set, the database will be created in the temp folder with the name minitwit.db.
-  Otherwise, the database will be created in the path specified by the environment variable.  
-*/
+// Add HTTP logging
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestPath
+        | HttpLoggingFields.RequestMethod
+        | HttpLoggingFields.ResponseStatusCode;
+});
+
 string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combine(Path.GetTempPath(), "minitwit.db");
 
 builder.Services.AddDbContext<ChirpDBContext>(options => options.UseSqlite($"Data Source={dbPath}"));
@@ -69,22 +66,20 @@ if (clientId != null && clientSecret != null)
             o.ClientSecret = clientSecret;
             o.CallbackPath = "/signin-github";
             o.Scope.Add("user:email");
-        });   
+        });
 }
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseHttpLogging();
 app.UseStaticFiles();
-//test
 app.UseRouting();
 
 app.UseAuthentication();
@@ -93,10 +88,6 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 
-/*
-  This is a custom redirect policy for the /Register and /Login page
-  If the user is authenticated and tries to go to the /Register or /Login page they will be redirected to the home page
-*/
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/Identity/Account/Register") && (context.User.Identity?.IsAuthenticated ?? true))
@@ -113,18 +104,16 @@ app.Use(async (context, next) =>
     }
 });
 
-
 using (var scope = app.Services.CreateScope())
 {
     using var context = scope.ServiceProvider.GetService<ChirpDBContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Author>>();
     if (context == null) return;
     if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabaseAchievements(context);
-    // Replace with line above to seed the database with dummy-data
+    // Replace line below with line above to seed the database with dummy-data
     // if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabase(context, userManager);
 }
 
-//The tests use the instead of a delay to know when the server is ready
 app.Logger.LogInformation("Application started and listening on port 5273");
 
 app.Run();

@@ -87,6 +87,8 @@
       - "{{ db_volume }}:/app/data"
     env:
       CHIRPDBPATH: "/app/data/minitwit.db"
+      Logging__LogLevel__Microsoft.AspNetCore.HttpLogging.HttpLoggingMiddleware: "Information"
+      Logging__LogLevel__Microsoft.EntityFrameworkCore: "Warning"
 
 - name: Cleanup dangling images
   community.docker.docker_prune:
