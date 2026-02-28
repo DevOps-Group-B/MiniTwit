@@ -43,6 +43,7 @@ builder.Services.AddDefaultIdentity<Author>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 1;
     options.Password.RequiredUniqueChars = 0;
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
 }).AddEntityFrameworkStores<ChirpDBContext>();
 
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
