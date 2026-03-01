@@ -1,16 +1,13 @@
-# Summary of this workflow:
-# This action runs every Friday at 11:59 or can be triggered manually.
-# It checks out the repository, generates a new incrementing release tag (prod-N), and collects commit messages from the past week.
-# Then it creates a GitHub release with the new tag and release notes summarizing the week’s changes.
-
-
 name: Weekly Release
+
 on:
   schedule:
     - cron: '59 11 * * 5'
-  workflow_dispatch:
+  workflow_dispatch: # Allows you to trigger it manually for testing
+
 permissions:
   contents: write
+
 jobs:
   create_weekly_release:
     runs-on: ubuntu-latest
@@ -18,12 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      
+          fetch-depth: 0 
+
       - name: Generate Release Tag
         id: tag
         run: |
-          # Extract just the number from tags like 'prod-6' or 'prod-6-2be86cf'
+          # Finds the latest prod-N tag and increments the number
           LATEST_TAG=$(git tag --list 'prod-*' | sed 's/prod-//' | grep -oE '^[0-9]+' | sort -n | tail -1)
           if [ -z "$LATEST_TAG" ]; then
             NEXT_VERSION=1
@@ -33,29 +30,12 @@ jobs:
           TAG_NAME="prod-${NEXT_VERSION}"
           echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
 
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git tag ${{ steps.tag.outputs.tag }}
-          git push origin ${{ steps.tag.outputs.tag }}
-
-      - name: Generate Release Notes
-        id: notes
-        run: |
-          echo "## Weekly Changes (${{ steps.tag.outputs.tag }})" > release_notes.md
-          echo "" >> release_notes.md
-          git log --oneline --since="7 days ago" >> release_notes.md
-          if [ ! -s release_notes.md ]; then
-            echo "No changes in the last 7 days." > release_notes.md
-          fi
-
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          name: ${{ steps.tag.outputs.tag }}
-          body_path: release_notes.md
+          name: Weekly Update ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true 
           draft: false
           prerelease: false
         env:
