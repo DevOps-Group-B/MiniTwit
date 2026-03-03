@@ -54,7 +54,7 @@ public class ChirpDBContext : IdentityDbContext<Author>
         
         modelBuilder.Entity<AuthorAchievement>()
             .Property(a => a.AchievedAt)
-            .HasDefaultValueSql("datetime('now')");
+            .HasDefaultValueSql("NOW()");
         
         modelBuilder.Entity<Author>()
             .HasIndex(a => a.Name)
