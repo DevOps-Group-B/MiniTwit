@@ -52,10 +52,13 @@ public class ChirpDBContext : IdentityDbContext<Author>
             .WithMany(e => e.AuthorAchievements)
             .HasForeignKey(e => e.AchievementId);
         
+        var isPostgres = Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL";
+
+
         modelBuilder.Entity<AuthorAchievement>()
             .Property(a => a.AchievedAt)
-            .HasDefaultValueSql("NOW()");
-        
+            .HasDefaultValueSql(isPostgres ? "NOW()" : "datetime('now')"); //Ok now uses syntax depending on if it's postgres or Sqlite3 it needs.
+            
         modelBuilder.Entity<Author>()
             .HasIndex(a => a.Name)
             .IsUnique();
