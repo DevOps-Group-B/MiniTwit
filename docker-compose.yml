@@ -1,0 +1,8 @@
+services:
+  minitwit:
+    image: ${DOCKERHUB_USERNAME}/minitwitimage:${IMAGE_TAG}
+    restart: always
+    ports:
+      - "80:5273"
+    environment:
+      POSTGRES_CONNECTION_STRING: ${POSTGRES_CONNECTION_STRING}

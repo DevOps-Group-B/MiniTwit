@@ -8,6 +8,7 @@ using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -27,13 +28,25 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
 /*
-  The database path is set to the environment variable CHIRPDBPATH.
-  If the environment variable is not set, the database will be created in the temp folder with the name minitwit.db.
-  Otherwise, the database will be created in the path specified by the environment variable.  
+  Database configuration:
+  - In production: Uses PostgreSQL via POSTGRES_CONNECTION_STRING environment variable
+  - In development: Falls back to SQLite in temp folder if CONNECTION_STRING is not set
 */
-string dbPath = Environment.GetEnvironmentVariable("CHIRPDBPATH") ?? Path.Combine(Path.GetTempPath(), "minitwit.db");
+string? connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
-builder.Services.AddDbContext<ChirpDBContext>(options => options.UseSqlite($"Data Source={dbPath}"));
+if (!string.IsNullOrEmpty(connectionString))
+{
+    // Production: Use PostgreSQL
+    builder.Services.AddDbContext<ChirpDBContext>(options => 
+        options.UseNpgsql(connectionString));
+}
+else
+{
+    // Development: Fall back to SQLite
+    string dbPath = Path.Combine(Path.GetTempPath(), "minitwit.db");
+    builder.Services.AddDbContext<ChirpDBContext>(options => 
+        options.UseSqlite($"Data Source={dbPath}"));
+}
 
 builder.Services.AddDefaultIdentity<Author>(options =>
 {

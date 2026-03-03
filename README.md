@@ -1,9 +1,5 @@
 # MiniTwit 
 
-## 🛠 Development Environments
-
-We use **Ansible** as our configuration "Source of Truth" to ensure that our local development environment perfectly matches our production server.
-
 ### 1. Local Setup (Vagrant + Ansible)
 To start a local Ubuntu VM that mimics our production server on your own machine:
 
@@ -22,24 +18,46 @@ To start a local Ubuntu VM that mimics our production server on your own machine
 
 ---
 
-### 2. Manual Docker (Quick Start)
-If you wish to run the container directly on your host machine without the Vagrant VM:
+### 2. Docker Compose (For local testing)
+Run both the application and PostgreSQL database together:
 
-# Build the image locally
 ```bash
-docker build -t minitwit/webserver ./itu-minitwit
+# Create .env file with database credentials
+cp .env.example .env
+
+# Start all services
+docker-compose up
+
+# Access the application
+open http://localhost
 ```
-# Run with persistent volume mapping
-```bash
 
+**Stop services:**
+```bash
+docker-compose down
+```
+> ⚠️ **Note:** This connects directly to the **production database**. Any cheeps or users you create will be real.
+
+---
+
+### 3. Manual Docker (Single Container)
+If you wish to run only the web container without PostgreSQL:
+
+```bash
+# Build the image locally
+docker build -t minitwit/webserver ./itu-minitwit
+
+# Run with environment variable for PostgreSQL
 docker run -d \
   -p 5273:5273 \
   --name minitwit \
-  -v minitwit_db_volume:/app/data \
-  -e CHIRPDBPATH=/app/data/minitwit.db \
+  -e POSTGRES_CONNECTION_STRING="Host=your-db-host;Database=minitwit;Username=minitwit_user;Password=your_password;Port=5432" \
   minitwit/webserver
 ```
+
 ---
+
+
 ### Required GitHub Secrets
 To enable successful deployments, the following secrets must be configured in the repository:
 
@@ -48,3 +66,8 @@ To enable successful deployments, the following secrets must be configured in th
 * **`SSH_KEY`**: The private SSH key for server access.
 * **`DOCKERHUB_USERNAME`**: Your Docker Hub account ID.
 * **`DOCKERHUB_TOKEN`**: A Personal Access Token (PAT) for Docker Hub.
+* **`POSTGRES_CONNECTION_STRING`**: PostgreSQL connection string (e.g., `Host=164.92.164.171;Database=minitwit;Username=minitwit_user;Password=your_password;Port=5432`)
+
+### Database Setup
+The application requires a PostgreSQL 15+ database server. Connection details are passed via the `POSTGRES_CONNECTION_STRING` environment variable.
+

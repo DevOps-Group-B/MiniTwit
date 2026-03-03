@@ -93,4 +93,4 @@ jobs:
             server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           options: |
-            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }}"
+            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} POSTGRES_CONNECTION_STRING='${{ secrets.POSTGRES_CONNECTION_STRING }}'"
