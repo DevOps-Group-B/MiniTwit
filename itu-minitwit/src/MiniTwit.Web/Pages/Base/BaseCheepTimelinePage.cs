@@ -30,7 +30,7 @@ public class BaseCheepTimelinePage : BaseCheepDisplayPage
         {
             AuthorId = AuthenticatedAuthor.Id,
             Text = FormData.Message,
-            TimeStamp = DateTime.Now
+            TimeStamp = DateTime.UtcNow
         });
 
         return RedirectToPage();

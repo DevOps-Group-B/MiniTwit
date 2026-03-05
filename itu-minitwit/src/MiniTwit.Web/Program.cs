@@ -9,6 +9,7 @@ using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Serilog;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -16,7 +17,20 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 /// It also sets up the authentication with GitHub and other middleware.
 /// </summary>
 
+// Bootstrap logger active until full Serilog config is read from appsettings
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Replace the default .NET logging with Serilog, configured from appsettings.json
+builder.Host.UseSerilog((context, services, config) =>
+    config
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .WriteTo.Console(outputTemplate:
+            "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"));
 
 // Add user secrets
 if (builder.Environment.IsDevelopment())
@@ -98,7 +112,19 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-//test
+
+// Log every HTTP request: method, path, client IP, status code, elapsed ms
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} from {RemoteIpAddress} => {StatusCode} in {Elapsed:0}ms";
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RemoteIpAddress",
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+    };
+});
+
 app.UseRouting();
 
 app.UseAuthentication();
