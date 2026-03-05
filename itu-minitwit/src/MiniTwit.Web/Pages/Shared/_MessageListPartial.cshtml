@@ -25,7 +25,7 @@
                 <p style="display:inline;">
                     @cheep.Message
                     <span>
-                        <small>&mdash; @cheep.Timestamp.ToString("MM/dd/yy H:mm:ss")</small>
+                        <small>&mdash; <time class="local-time" datetime="@cheep.Timestamp.ToUniversalTime().ToString("o")">@cheep.Timestamp.ToUniversalTime().ToString("MM/dd/yy H:mm:ss")</time> UTC</small>
                     </span>
                 </p>
             </div>
