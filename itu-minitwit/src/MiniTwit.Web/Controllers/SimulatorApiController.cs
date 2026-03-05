@@ -162,7 +162,7 @@ public class SimulatorApiController : ControllerBase
         {
             Text = payload.Content,
             AuthorId = user.Id,
-            TimeStamp = DateTime.Now
+            TimeStamp = DateTime.UtcNow
         };
         
         await _cheepService.PostCheepAsync(cheep);
