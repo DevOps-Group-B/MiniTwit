@@ -4,6 +4,7 @@ using Chirp.Core.Services;
 using Chirp.Core.Simulator;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Prometheus;
 
 namespace Chirp.Web.Controllers;
 
@@ -23,6 +24,11 @@ public class SimulatorApiController : ControllerBase
         _authorService = authorService;
         _userManager = userManager;
     }
+    
+    private static readonly Counter RegisterCounter = Metrics.CreateCounter(
+        "minitwit_registrations_total", 
+        "Number of user registrations."
+    );
 
     // Helper: Updates the 'latest' value if provided in the query string
     private async Task UpdateLatest(int? latest)
@@ -87,6 +93,7 @@ public class SimulatorApiController : ControllerBase
         
         if (result.Succeeded)
         {
+            RegisterCounter.Inc();
             return NoContent(); // 204 No Content
         }
         

@@ -1,2 +1,4 @@
 .env
 .Vagrant
+/itu-minitwit/monitoring/grafana/dashboards
+/itu-minitwit/monitoring/grafana/datasources

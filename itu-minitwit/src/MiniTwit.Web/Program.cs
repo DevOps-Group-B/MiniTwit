@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Serilog;
+using Prometheus;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -112,6 +113,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseHttpMetrics();
 
 // Log every HTTP request: method, path, client IP, status code, elapsed ms
 app.UseSerilogRequestLogging(options =>
@@ -131,6 +133,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapMetrics();
 app.MapControllers();
 
 /*
