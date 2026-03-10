@@ -17,7 +17,7 @@ services:
       dockerfile: ./Dockerfile
       context: ./itu-minitwit/monitoring/prometheus
     image: prometheus_image
-    container_name: prometheus
+    container_name: itu-minitwit-prometheus
     ports:
       - "9090:9090"
 
@@ -26,7 +26,7 @@ services:
       dockerfile: ./Dockerfile
       context: ./itu-minitwit/monitoring/grafana
     image: grafana_image
-    container_name: grafana
+    container_name: itu-minitwit-grafana
     ports:
       - "3000:3000"
     volumes:

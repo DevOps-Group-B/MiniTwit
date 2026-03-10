@@ -26,7 +26,7 @@ Run both the application and PostgreSQL database together:
 cp .env.example .env
 
 # Start all services
-docker-compose up
+docker compose up
 
 # Access the application
 open http://localhost

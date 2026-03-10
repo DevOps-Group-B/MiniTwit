@@ -8,9 +8,9 @@ using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Serilog;
 using Prometheus;
+using Minitwit.Services;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -39,6 +39,7 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 }
 // Add services to the container.
+builder.Services.AddSingleton<IMetricsService, MetricsService>();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
@@ -132,9 +133,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapRazorPages();
 app.MapMetrics();
 app.MapControllers();
+app.MapRazorPages();
 
 /*
   This is a custom redirect policy for the /Register and /Login page
@@ -159,6 +160,8 @@ app.Use(async (context, next) =>
 
 using (var scope = app.Services.CreateScope())
 {
+    scope.ServiceProvider.GetRequiredService<IMetricsService>();
+
     using var context = scope.ServiceProvider.GetService<ChirpDBContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Author>>();
     if (context == null) return;
