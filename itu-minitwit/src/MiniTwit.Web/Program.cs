@@ -176,9 +176,11 @@ using (var scope = app.Services.CreateScope())
     {
         var totalUsers = await userManager.Users.CountAsync();
         var totalCheeps = await cheepService.GetTotalCheepsAsync();
+        var cheepsPerUser = totalUsers > 0 ? (float)totalCheeps / totalUsers : 0;
         
         metricsService.SetTotalUsers(totalUsers);
         metricsService.SetTotalCheeps(totalCheeps);
+        metricsService.SetCheepsPerUsers(cheepsPerUser);
     }
     catch (Exception ex)
     {

@@ -39,4 +39,14 @@ public class MetricsController : ControllerBase
         _metrics.SetTotalCheeps(totalCheeps);
         return Ok(new { TotalCheeps = totalCheeps });
     }
+
+    [HttpGet("cheeps-per-user")]
+    public async Task<IActionResult> GetCheepsPerUser()
+    {
+        var totalUsers = await _userManager.Users.CountAsync();
+        var totalCheeps = await _cheepService.GetTotalCheepsAsync();
+        var cheepsPerUser = totalUsers > 0 ? (float)totalCheeps / totalUsers : 0;
+        _metrics.SetCheepsPerUsers((float)cheepsPerUser);
+        return Ok(new { CheepsPerUser = cheepsPerUser });
+    }
 }

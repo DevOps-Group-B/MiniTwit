@@ -29,5 +29,5 @@ public class MetricsService : IMetricsService
 
     public void SetTotalUsers(int value) => TotalUsers.Set(value);
     public void SetTotalCheeps(int value) => TotalCheeps.Set(value);
-    public void SetCheepsPerUsers(int value) => CheepsPerUser.Set(value);
+    public void SetCheepsPerUsers(float value) => CheepsPerUser.Set(value);
 }
