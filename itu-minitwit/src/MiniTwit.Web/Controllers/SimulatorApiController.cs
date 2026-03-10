@@ -4,7 +4,6 @@ using Chirp.Core.Services;
 using Chirp.Core.Simulator;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Minitwit.Services;
 
 namespace Chirp.Web.Controllers;
 
@@ -16,15 +15,13 @@ public class SimulatorApiController : ControllerBase
     private readonly ICheepService _cheepService;
     private readonly IAuthorService _authorService;
     private readonly UserManager<Author> _userManager;
-    private readonly IMetricsService _metrics;
 
-    public SimulatorApiController(ISimulatorRepository simRepo, ICheepService cheepService, IAuthorService authorService, UserManager<Author> userManager, IMetricsService metrics)
+    public SimulatorApiController(ISimulatorRepository simRepo, ICheepService cheepService, IAuthorService authorService, UserManager<Author> userManager)
     {
         _simRepo = simRepo;
         _cheepService = cheepService;
         _authorService = authorService;
         _userManager = userManager;
-        _metrics = metrics;
     }
 
     // Helper: Updates the 'latest' value if provided in the query string
@@ -52,9 +49,6 @@ public class SimulatorApiController : ControllerBase
     public async Task<IActionResult> GetLatest()
     {
         var val = await _simRepo.GetLatestAsync();
-
-        _metrics.SetLatest(val);
-
         return Ok(new LatestValueDTO { Latest = val });
     }
 
