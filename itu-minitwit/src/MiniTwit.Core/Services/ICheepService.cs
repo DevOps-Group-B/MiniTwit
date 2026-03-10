@@ -14,4 +14,5 @@ public interface ICheepService
     public Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAmountAsync(int numberOfCheeps, string authorId);
     public Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromUserTimelineAsync(int page, string authorId);
     public Task PostCheepAsync(Cheep cheep);
+    public Task<int> GetTotalCheepsAsync();
 }

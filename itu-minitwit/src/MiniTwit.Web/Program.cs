@@ -160,14 +160,30 @@ app.Use(async (context, next) =>
 
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<IMetricsService>();
+    var services = scope.ServiceProvider;
 
-    using var context = scope.ServiceProvider.GetService<ChirpDBContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Author>>();
+    using var context = services.GetService<ChirpDBContext>();
+    var userManager = services.GetRequiredService<UserManager<Author>>();
     if (context == null) return;
     if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabaseAchievements(context);
     // Replace with line above to seed the database with dummy-data
     // if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabase(context, userManager);
+
+    var cheepService = services.GetRequiredService<ICheepService>();
+    var metricsService = services.GetRequiredService<IMetricsService>();
+
+    try 
+    {
+        var totalUsers = await userManager.Users.CountAsync();
+        var totalCheeps = await cheepService.GetTotalCheepsAsync();
+        
+        metricsService.SetTotalUsers(totalUsers);
+        metricsService.SetTotalCheeps(totalCheeps);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to initialize metrics on startup");
+    }
 }
 
 //The tests use the instead of a delay to know when the server is ready
