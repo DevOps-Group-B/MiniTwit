@@ -1,8 +1,41 @@
 services:
   minitwit:
-    image: ${DOCKERHUB_USERNAME}/minitwitimage:${IMAGE_TAG}
+    build:
+      context: ./itu-minitwit
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "80:5273"
     environment:
       POSTGRES_CONNECTION_STRING: ${POSTGRES_CONNECTION_STRING}
+    depends_on:
+      - grafana
+      - prometheus
+
+  prometheus:
+    build: 
+      dockerfile: ./Dockerfile
+      context: ./itu-minitwit/monitoring/prometheus
+    image: prometheus_image
+    container_name: itu-minitwit-prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    build: 
+      dockerfile: ./Dockerfile
+      context: ./itu-minitwit/monitoring/grafana
+    image: grafana_image
+    container_name: itu-minitwit-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+
+volumes:
+  grafana-storage: {}

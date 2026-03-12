@@ -8,8 +8,9 @@ using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Serilog;
+using Prometheus;
+using Minitwit.Services;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -38,6 +39,7 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 }
 // Add services to the container.
+builder.Services.AddSingleton<IMetricsService, MetricsService>();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
@@ -112,6 +114,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseHttpMetrics();
 
 // Log every HTTP request: method, path, client IP, status code, elapsed ms
 app.UseSerilogRequestLogging(options =>
@@ -130,8 +133,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapRazorPages();
+app.MapMetrics();
 app.MapControllers();
+app.MapRazorPages();
 
 /*
   This is a custom redirect policy for the /Register and /Login page
@@ -156,12 +160,32 @@ app.Use(async (context, next) =>
 
 using (var scope = app.Services.CreateScope())
 {
-    using var context = scope.ServiceProvider.GetService<ChirpDBContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Author>>();
+    var services = scope.ServiceProvider;
+
+    using var context = services.GetService<ChirpDBContext>();
+    var userManager = services.GetRequiredService<UserManager<Author>>();
     if (context == null) return;
     if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabaseAchievements(context);
     // Replace with line above to seed the database with dummy-data
     // if (DbInitializer.CreateDb(context)) await DbInitializer.SeedDatabase(context, userManager);
+
+    var cheepService = services.GetRequiredService<ICheepService>();
+    var metricsService = services.GetRequiredService<IMetricsService>();
+
+    try 
+    {
+        var totalUsers = await userManager.Users.CountAsync();
+        var totalCheeps = await cheepService.GetTotalCheepsAsync();
+        var cheepsPerUser = totalUsers > 0 ? (float)totalCheeps / totalUsers : 0;
+        
+        metricsService.SetTotalUsers(totalUsers);
+        metricsService.SetTotalCheeps(totalCheeps);
+        metricsService.SetCheepsPerUsers(cheepsPerUser);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to initialize metrics on startup");
+    }
 }
 
 //The tests use the instead of a delay to know when the server is ready

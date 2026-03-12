@@ -122,4 +122,9 @@ public class CheepRepository : ICheepRepository
 
         if (!hasAchievement) await _achievementRepository.AddNewAuthorAchievementAsync(cheep.AuthorId, 2);
     }
+
+    public async Task<int> GetTotalCheepsAsync()
+    {
+        return await _dbContext.Cheeps.CountAsync();
+    }
 }

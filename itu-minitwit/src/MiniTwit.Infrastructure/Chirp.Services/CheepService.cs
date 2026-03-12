@@ -48,4 +48,10 @@ public class CheepService : ICheepService
     {
         await _cheepRepository.PostCheepAsync(cheep);
     }
+
+    public async Task<int> GetTotalCheepsAsync()
+    {
+        var totalCheepCount = await _cheepRepository.GetTotalCheepsAsync();
+        return totalCheepCount;
+    }
 }
