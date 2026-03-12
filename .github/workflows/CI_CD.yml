@@ -1,12 +1,12 @@
 # --- PIPELINE SUMMARY ---
 # 1. Trigger: Runs automatically on a push to the 'main' branch or manually via workflow_dispatch.
 # 2. Build & Test: Checks out code, sets up .NET, restores, and builds the project.
-#    Installs Playwright dependencies and runs all Unit, Integration, and E2E tests. 
+#    Installs Playwright dependencies and runs all Unit, Integration, and E2E tests.
 #    If any test fails, the pipeline halts immediately to protect the production server.
-# 3. Docker Image: If tests pass, it logs into Docker Hub, builds a new image using the GitHub run 
+# 3. Docker Image: If tests pass, it logs into Docker Hub, builds a new image using the GitHub run
 #    number as a tag (e.g., :45), and pushes it to the registry.
 # 4. Deployment: Connects to the DigitalOcean droplet via SSH, pulls the new image, and swaps containers.
-#    It mounts a Managed Docker Volume and passes the DB path as an environment variable so the 
+#    It mounts a Managed Docker Volume and passes the DB path as an environment variable so the
 #    simulator's registered users and cheeps survive the deployment.
 
 name: CI_CD
@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read 
+  contents: read
 
 env:
   IMAGE_NAME: minitwitimage
@@ -69,8 +69,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Builds the image and tags it with both the unique GitHub run number and :latest
-      - name: Build and push image
+      # Builds the app image and tags it with both the unique GitHub run number and :latest
+      - name: Build and push app image
         uses: docker/build-push-action@v6
         with:
           context: ./itu-minitwit
@@ -80,11 +80,31 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
+      # Build and push Prometheus image
+      - name: Build and push Prometheus image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/prometheus
+          file: ./itu-minitwit/monitoring/prometheus/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/prometheus_image:latest
+
+      # Build and push Grafana image
+      - name: Build and push Grafana image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/grafana
+          file: ./itu-minitwit/monitoring/grafana/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/grafana_image:latest
+
       # --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         env:
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }} 
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           playbook: ansible/playbook.yml
           directory: ./
