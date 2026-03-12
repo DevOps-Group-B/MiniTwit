@@ -1,4 +1,7 @@
 # MiniTwit 
+Our links:
+Minitwit Website: http://165.227.170.149
+Monitoring: http://165.227.170.149:3000
 
 ### 1. Local Setup (Vagrant + Ansible)
 To start a local Ubuntu VM that mimics our production server on your own machine:
