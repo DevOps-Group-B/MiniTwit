@@ -63,6 +63,10 @@
     update_cache: true
   become: true
 
+- name: Create Docker network for monitoring
+  community.docker.docker_network:
+    name: minitwit_network
+    state: present
 
 - name: Log in to Docker Hub
   community.docker.docker_login:
@@ -70,6 +74,47 @@
     password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
   when: lookup('env', 'DOCKERHUB_TOKEN') != ""
 
+# --- Deploy Prometheus ---
+- name: Pull and Run Prometheus Container
+  community.docker.docker_container:
+    name: "itu-minitwit-prometheus"
+    image: "{{ dockerhub_user }}/prometheus_image:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    ports:
+      - "9090:9090"
+    networks:
+      - name: minitwit_network
+
+# --- Deploy Grafana ---
+- name: Create Grafana volume
+  community.docker.docker_volume:
+    name: grafana-storage
+    state: present
+
+- name: Pull and Run Grafana Container
+  community.docker.docker_container:
+    name: "itu-minitwit-grafana"
+    image: "{{ dockerhub_user }}/grafana_image:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - "grafana-storage:/var/lib/grafana"
+    env:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+    networks:
+      - name: minitwit_network
+
+# --- Deploy MiniTwit App ---
 - name: Pull and Run MiniTwit Container
   community.docker.docker_container:
     name: "{{ container_name }}"
@@ -77,10 +122,13 @@
     state: started
     restart_policy: always
     recreate: true
+    pull: true
     ports:
       - "{{ host_port }}:{{ app_port }}"
     env:
       POSTGRES_CONNECTION_STRING: "{{ POSTGRES_CONNECTION_STRING }}"
+    networks:
+      - name: minitwit_network
 
 - name: Cleanup dangling images
   community.docker.docker_prune:
