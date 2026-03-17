@@ -1,3 +1,15 @@
+- name: Remove conflicting Docker GPG file
+  file:
+    path: /etc/apt/keyrings/docker.gpg
+    state: absent
+  become: true
+
+- name: Remove old Docker source list to prevent Signed-By conflict
+  file:
+    path: /etc/apt/sources.list.d/docker.list 
+    state: absent
+  become: true
+
 - name: Install prerequisite packages
   ansible.builtin.apt:
     name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip, gnupg]
