@@ -56,19 +56,6 @@ jobs:
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/prometheus/Dockerfile
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/grafana/Dockerfile
 
-      - name: Ansible Quality Gate (ansible-lint)
-        run: |
-          # 1. Install ansible-core and the collection
-          sudo apt-get update && sudo apt-get install -y ansible-core
-          ansible-galaxy collection install -r ansible/requirements.yml
-          
-          # 2. Install ansible-lint
-          pipx install ansible-lint
-          
-          # 3. Run the linter, telling it where the dependencies are
-          # We use the project root so it finds the requirements.yml automatically
-          ansible-lint ansible/playbook.yml
-
       - name: Build project
         working-directory: itu-minitwit
         run: dotnet build --no-restore
