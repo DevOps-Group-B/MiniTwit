@@ -57,11 +57,12 @@ jobs:
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/grafana/Dockerfile
 
       - name: Ansible Quality Gate (ansible-lint)
-        run: |
-          sudo apt-get update && sudo apt-get install -y ansible-core
-          ansible-galaxy collection install community.docker
-          pipx install ansible-lint
-          ansible-lint ansible/playbook.yml
+              run: |
+                pipx install ansible
+                pipx inject ansible ansible-lint
+                ansible-galaxy collection install community.docker
+                ansible-lint ansible/playbook.yml
+
 
 
       - name: Build project
