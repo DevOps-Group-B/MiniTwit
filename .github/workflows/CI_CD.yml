@@ -62,9 +62,6 @@ jobs:
           ansible-galaxy collection install community.docker
           ansible-lint ansible/playbook.yml
 
-      
-      
-
       - name: Build project
         working-directory: itu-minitwit
         run: dotnet build --no-restore
