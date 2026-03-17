@@ -12,25 +12,25 @@ public static class DbInitializer
     {
         return context.Database.EnsureCreated();
     }
-    
+
     public static async Task SeedDatabase(ChirpDBContext chirpContext, UserManager<Author> userManager)
     {
         if (!(chirpContext.Authors.Any() && chirpContext.Cheeps.Any()))
         {
-            var a1 = new Author() { Name = "Roger Histand", UserName = "Roger+Histand@hotmail.com", Email = "Roger+Histand@hotmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "I love coffee!"};
-            var a2 = new Author() { Name = "Luanna Muro", UserName = "Luanna-Muro@ku.dk", Email = "Luanna-Muro@ku.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "I have 4 cats :O"};
-            var a3 = new Author() { Name = "Wendell Ballan", UserName = "Wendell-Ballan@gmail.com", Email = "Wendell-Ballan@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Dogperson"};
-            var a4 = new Author() { Name = "Nathan Sirmon", UserName = "Nathan+Sirmon@dtu.dk", Email = "Nathan+Sirmon@dtu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Long walks on the beach enjoyer:)"};
-            var a5 = new Author() { Name = "Quintin Sitts", UserName = "Quintin+Sitts@itu.dk", Email = "Quintin+Sitts@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Keep the vibe cruisin'"};
-            var a6 = new Author() { Name = "Mellie Yost", UserName = "Mellie+Yost@ku.dk", Email = "Mellie+Yost@ku.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Crimefigther at night, popsinger at daytime"};
-            var a7 = new Author() { Name = "Malcolm Janski", UserName = "Malcolm-Janski@gmail.com", Email = "Malcolm-Janski@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Did anyone say lets bake a cake?"};
-            var a8 = new Author() { Name = "Octavio Wagganer", UserName = "Octavio.Wagganer@dtu.dk", Email = "Octavio.Wagganer@dtu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Happy new year!"};
-            var a9 = new Author() { Name = "Johnnie Calixto", UserName = "Johnnie+Calixto@itu.dk", Email = "Johnnie+Calixto@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "swiftie fan over here;)"};
-            var a10 = new Author() { Name = "Jacqualine Gilcoine", UserName = "Jacqualine.Gilcoine@gmail.com", Email = "Jacqualine.Gilcoine@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Pro-wrestler"};
-            var a11 = new Author() { Name = "Helge", UserName = "ropf@itu.dk", Email = "ropf@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Pro golfer"};
-            var a12 = new Author() { Name = "Adrian", UserName = "adho@itu.dk", Email = "adho@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Je suis..."};
+            var a1 = new Author() { Name = "Roger Histand", UserName = "Roger+Histand@hotmail.com", Email = "Roger+Histand@hotmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "I love coffee!" };
+            var a2 = new Author() { Name = "Luanna Muro", UserName = "Luanna-Muro@ku.dk", Email = "Luanna-Muro@ku.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "I have 4 cats :O" };
+            var a3 = new Author() { Name = "Wendell Ballan", UserName = "Wendell-Ballan@gmail.com", Email = "Wendell-Ballan@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Dogperson" };
+            var a4 = new Author() { Name = "Nathan Sirmon", UserName = "Nathan+Sirmon@dtu.dk", Email = "Nathan+Sirmon@dtu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Long walks on the beach enjoyer:)" };
+            var a5 = new Author() { Name = "Quintin Sitts", UserName = "Quintin+Sitts@itu.dk", Email = "Quintin+Sitts@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Keep the vibe cruisin'" };
+            var a6 = new Author() { Name = "Mellie Yost", UserName = "Mellie+Yost@ku.dk", Email = "Mellie+Yost@ku.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Crimefigther at night, popsinger at daytime" };
+            var a7 = new Author() { Name = "Malcolm Janski", UserName = "Malcolm-Janski@gmail.com", Email = "Malcolm-Janski@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Did anyone say lets bake a cake?" };
+            var a8 = new Author() { Name = "Octavio Wagganer", UserName = "Octavio.Wagganer@dtu.dk", Email = "Octavio.Wagganer@dtu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Happy new year!" };
+            var a9 = new Author() { Name = "Johnnie Calixto", UserName = "Johnnie+Calixto@itu.dk", Email = "Johnnie+Calixto@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "swiftie fan over here;)" };
+            var a10 = new Author() { Name = "Jacqualine Gilcoine", UserName = "Jacqualine.Gilcoine@gmail.com", Email = "Jacqualine.Gilcoine@gmail.com", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Pro-wrestler" };
+            var a11 = new Author() { Name = "Helge", UserName = "ropf@itu.dk", Email = "ropf@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Pro golfer" };
+            var a12 = new Author() { Name = "Adrian", UserName = "adho@itu.dk", Email = "adho@itu.dk", EmailConfirmed = true, Cheeps = new List<Cheep>(), Followers = new List<AuthorFollower>(), Following = new List<AuthorFollower>(), Bio = "Je suis..." };
 
-            
+
             var c1 = new Cheep() { CheepId = 1, AuthorId = a10.Id, Text = "They were married in Chicago, with old Smith, and was expected aboard every day; meantime, the two went past me.", TimeStamp = DateTime.Parse("2023-08-01 13:14:37") };
             var c2 = new Cheep() { CheepId = 2, AuthorId = a10.Id, Text = "And then, as he listened to all that''s left o'' twenty-one people.", TimeStamp = DateTime.Parse("2023-08-01 13:15:21") };
             var c3 = new Cheep() { CheepId = 3, AuthorId = a10.Id, Text = "In various enchanted attitudes, like the Sperm Whale.", TimeStamp = DateTime.Parse("2023-08-01 13:14:58") };
@@ -688,7 +688,7 @@ public static class DbInitializer
             var c655 = new Cheep() { CheepId = 655, AuthorId = a9.Id, Text = "What do you think so meanly of him?", TimeStamp = DateTime.Parse("2023-08-01 13:13:56") };
             var c656 = new Cheep() { CheepId = 656, AuthorId = a11.Id, Text = "Hello, BDSA students!", TimeStamp = DateTime.Parse("2023-08-01 12:16:48") };
             var c657 = new Cheep() { CheepId = 657, AuthorId = a12.Id, Text = "Hej, velkommen til kurset.", TimeStamp = DateTime.Parse("2023-08-01 13:08:28") };
-            
+
             a10.Cheeps = new List<Cheep>() { c1, c2, c3, c5, c7, c9, c10, c13, c17, c19, c21, c22, c26, c28, c30, c31, c33, c35, c36, c38, c41, c42, c43, c44, c45, c46, c47, c48, c49, c50, c60, c65, c67, c70, c71, c75, c77, c78, c79, c80, c82, c83, c84, c86, c88, c90, c93, c94, c95, c98, c101, c102, c103, c104, c105, c106, c109, c110, c112, c113, c115, c119, c120, c121, c123, c125, c126, c128, c129, c130, c132, c133, c135, c136, c138, c140, c142, c145, c146, c147, c150, c152, c153, c156, c159, c161, c162, c163, c170, c171, c172, c175, c176, c180, c181, c185, c187, c191, c192, c194, c195, c196, c197, c198, c199, c200, c202, c203, c205, c206, c207, c209, c214, c215, c217, c218, c219, c220, c221, c222, c223, c226, c227, c228, c229, c231, c232, c234, c236, c239, c241, c242, c243, c244, c245, c246, c248, c249, c250, c251, c252, c253, c254, c255, c257, c258, c260, c261, c264, c267, c268, c270, c271, c272, c273, c274, c278, c281, c282, c284, c285, c286, c288, c289, c290, c291, c294, c297, c300, c303, c304, c305, c306, c308, c311, c312, c313, c315, c316, c320, c325, c326, c329, c330, c333, c334, c336, c337, c338, c339, c340, c342, c343, c345, c346, c347, c350, c353, c354, c356, c358, c359, c361, c363, c364, c365, c367, c369, c370, c373, c376, c377, c378, c381, c382, c386, c388, c391, c392, c394, c395, c396, c398, c399, c402, c403, c404, c405, c406, c407, c408, c409, c410, c411, c414, c415, c416, c417, c419, c423, c424, c426, c427, c428, c429, c431, c432, c435, c437, c439, c444, c447, c453, c457, c459, c460, c461, c462, c464, c465, c467, c468, c471, c472, c473, c474, c475, c477, c479, c480, c482, c483, c484, c485, c486, c487, c493, c495, c498, c499, c501, c502, c504, c507, c509, c510, c512, c516, c517, c518, c520, c522, c523, c524, c526, c529, c530, c532, c535, c537, c538, c539, c541, c546, c551, c553, c555, c561, c563, c566, c567, c570, c571, c574, c575, c577, c579, c581, c582, c584, c585, c587, c589, c591, c594, c598, c600, c606, c607, c610, c612, c613, c615, c616, c618, c619, c622, c626, c627, c628, c629, c630, c632, c633, c635, c637, c638, c639, c640, c641, c642, c643, c644, c645, c646, c648, c650, c653, c654 };
             a5.Cheeps = new List<Cheep>() { c4, c12, c15, c18, c23, c25, c27, c51, c54, c63, c72, c76, c92, c99, c107, c108, c111, c116, c122, c131, c134, c143, c155, c158, c165, c178, c183, c188, c208, c224, c240, c262, c265, c275, c293, c298, c319, c341, c366, c368, c371, c380, c384, c390, c400, c420, c433, c445, c449, c452, c476, c488, c489, c491, c494, c497, c500, c505, c515, c525, c527, c531, c533, c534, c536, c547, c549, c559, c580, c593, c604, c609, c614, c623, c625, c634, c636, c649 };
             a3.Cheeps = new List<Cheep>() { c6, c32, c56, c61, c66, c69, c100, c149, c174, c179, c211, c212, c233, c283, c296, c307, c324, c327, c344, c351, c355, c357, c383, c413, c418, c441, c446, c450, c456, c481, c496, c511, c513, c521, c548, c552, c565, c568, c588, c592, c597, c601, c617 };
@@ -701,19 +701,19 @@ public static class DbInitializer
             a8.Cheeps = new List<Cheep>() { c55, c124, c139, c151, c164, c263, c310, c328, c360, c375, c430, c470, c564, c576, c605 };
             a11.Cheeps = new List<Cheep>() { c656 };
             a12.Cheeps = new List<Cheep>() { c657 };
-            
+
             Achievement ach1 = new Achievement() { AchievementId = 1, Title = "Rookie Chirper", Description = "Welcome aboard! You signed up successfully to Chirp", ImagePath = "/images/Badges/Signup-badge.png" };
             Achievement ach2 = new Achievement() { AchievementId = 2, Title = "Novice Cheepster", Description = "Congratulations! You created your first Cheep.", ImagePath = "/images/Badges/First-cheep-badge.png" };
             Achievement ach3 = new Achievement() { AchievementId = 3, Title = "Branching Out", Description = "You followed your first Chirper. Every great tree starts with a single branch.", ImagePath = "/images/Badges/First-following-badge.png" };
             Achievement ach4 = new Achievement() { AchievementId = 4, Title = "Social Magnet", Description = "Someone followed you. You must be cheeping some good stuff", ImagePath = "/images/Badges/First-follower-badge.png" };
-            
+
             chirpContext.Achievements.Add(ach1);
             chirpContext.Achievements.Add(ach2);
             chirpContext.Achievements.Add(ach3);
             chirpContext.Achievements.Add(ach4);
 
             await chirpContext.SaveChangesAsync();
-            
+
             AuthorAchievement aAch1 = new AuthorAchievement() { AuthorId = a1.Id, AchievementId = ach1.AchievementId };
             AuthorAchievement aAch2 = new AuthorAchievement() { AuthorId = a2.Id, AchievementId = ach1.AchievementId };
             AuthorAchievement aAch3 = new AuthorAchievement() { AuthorId = a3.Id, AchievementId = ach1.AchievementId };
@@ -726,7 +726,7 @@ public static class DbInitializer
             AuthorAchievement aAch10 = new AuthorAchievement() { AuthorId = a10.Id, AchievementId = ach1.AchievementId };
             AuthorAchievement aAch11 = new AuthorAchievement() { AuthorId = a11.Id, AchievementId = ach1.AchievementId };
             AuthorAchievement aAch12 = new AuthorAchievement() { AuthorId = a12.Id, AchievementId = ach1.AchievementId };
-            
+
             AuthorAchievement aAch13 = new AuthorAchievement() { AuthorId = a1.Id, AchievementId = ach2.AchievementId };
             AuthorAchievement aAch14 = new AuthorAchievement() { AuthorId = a2.Id, AchievementId = ach2.AchievementId };
             AuthorAchievement aAch15 = new AuthorAchievement() { AuthorId = a3.Id, AchievementId = ach2.AchievementId };
@@ -752,7 +752,7 @@ public static class DbInitializer
             a10.AuthorAchievements.Add(aAch10);
             a11.AuthorAchievements.Add(aAch11);
             a12.AuthorAchievements.Add(aAch12);
-            
+
             a1.AuthorAchievements.Add(aAch13);
             a2.AuthorAchievements.Add(aAch14);
             a3.AuthorAchievements.Add(aAch15);
@@ -780,7 +780,7 @@ public static class DbInitializer
             await userManager.CreateAsync(a12, "M32Want_Access");
         }
     }
-    
+
     public static async Task SeedDatabaseAchievements(ChirpDBContext chirpContext)
     {
         if (!chirpContext.Achievements.Any())
@@ -789,7 +789,7 @@ public static class DbInitializer
             Achievement ach2 = new Achievement() { AchievementId = 2, Title = "Novice Cheepster", Description = "Congratulations! You created your first Cheep.", ImagePath = "/images/Badges/First-cheep-badge.png" };
             Achievement ach3 = new Achievement() { AchievementId = 3, Title = "Branching Out", Description = "You followed your first Chirper. Every great tree starts with a single branch.", ImagePath = "/images/Badges/First-following-badge.png" };
             Achievement ach4 = new Achievement() { AchievementId = 4, Title = "Social Magnet", Description = "Someone followed you. You must be cheeping some good stuff", ImagePath = "/images/Badges/First-follower-badge.png" };
-            
+
             chirpContext.Achievements.Add(ach1);
             chirpContext.Achievements.Add(ach2);
             chirpContext.Achievements.Add(ach3);

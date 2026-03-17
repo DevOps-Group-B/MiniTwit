@@ -19,12 +19,12 @@ public class CheepRepository : ICheepRepository
         _dbContext = dbContext;
         _achievementRepository = achievementRepository;
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAsync(int page)
     {
         var query =
             from c in _dbContext.Cheeps
-            join a in _dbContext.Authors 
+            join a in _dbContext.Authors
                 on c.AuthorId equals a.Id
             orderby c.TimeStamp descending
             select new CheepDTO
@@ -34,15 +34,15 @@ public class CheepRepository : ICheepRepository
                 Message = c.Text,
                 Timestamp = c.TimeStamp
             };
-        
-        return (await query.Skip((page*32)-32).Take(32).ToListAsync(), await query.CountAsync());
+
+        return (await query.Skip((page * 32) - 32).Take(32).ToListAsync(), await query.CountAsync());
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAmountAsync(int numberOfCheeps)
     {
         var query =
             from c in _dbContext.Cheeps
-            join a in _dbContext.Authors 
+            join a in _dbContext.Authors
                 on c.AuthorId equals a.Id
             orderby c.TimeStamp descending
             select new CheepDTO
@@ -52,7 +52,7 @@ public class CheepRepository : ICheepRepository
                 Message = c.Text,
                 Timestamp = c.TimeStamp
             };
-        
+
         return (await query.Take(numberOfCheeps).ToListAsync(), await query.CountAsync());
     }
 
@@ -60,7 +60,7 @@ public class CheepRepository : ICheepRepository
     {
         var query =
             from c in _dbContext.Cheeps
-            join a in _dbContext.Authors 
+            join a in _dbContext.Authors
                 on c.AuthorId equals a.Id
             where a.Id == authorId
             orderby c.TimeStamp descending
@@ -71,15 +71,15 @@ public class CheepRepository : ICheepRepository
                 Message = c.Text,
                 Timestamp = c.TimeStamp
             };
-        
-        return (await query.Skip((page*32)-32).Take(32).ToListAsync(), await query.CountAsync());
+
+        return (await query.Skip((page * 32) - 32).Take(32).ToListAsync(), await query.CountAsync());
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromAuthorAmountAsync(int numberOfCheeps, string authorId)
     {
         var query =
             from c in _dbContext.Cheeps
-            join a in _dbContext.Authors 
+            join a in _dbContext.Authors
                 on c.AuthorId equals a.Id
             where a.Id == authorId
             orderby c.TimeStamp descending
@@ -90,17 +90,17 @@ public class CheepRepository : ICheepRepository
                 Message = c.Text,
                 Timestamp = c.TimeStamp
             };
-        
+
         return (await query.Take(numberOfCheeps).ToListAsync(), await query.CountAsync());
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsFromUserTimelineAsync(int page, string authorId)
     {
         var query =
             from cheep in _dbContext.Cheeps
             join a in _dbContext.Authors
                    on cheep.AuthorId equals a.Id
-            where a.Id == authorId || _dbContext.AuthorFollowers.Any(f =>  f.FollowingId == cheep.AuthorId && f.FollowerId == authorId)
+            where a.Id == authorId || _dbContext.AuthorFollowers.Any(f => f.FollowingId == cheep.AuthorId && f.FollowerId == authorId)
             orderby cheep.TimeStamp descending
             select new CheepDTO
             {
@@ -110,13 +110,13 @@ public class CheepRepository : ICheepRepository
                 Timestamp = cheep.TimeStamp
             };
 
-        return (await query.Skip((page*32)-32).Take(32).ToListAsync(), await query.CountAsync());
+        return (await query.Skip((page * 32) - 32).Take(32).ToListAsync(), await query.CountAsync());
     }
-    
+
     public async Task PostCheepAsync(Cheep cheep)
     {
         var hasAchievement = await _dbContext.AuthorAchievements.AnyAsync(a => a.AuthorId == cheep.AuthorId && a.AchievementId == 2);
-        
+
         _dbContext.Cheeps.Add(cheep);
         await _dbContext.SaveChangesAsync();
 

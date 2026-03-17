@@ -82,7 +82,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
             [Required]
             [Display(Name = "Name")]
             public string Name { get; set; }
-            
+
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -140,10 +140,10 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                     ModelState.AddModelError(string.Empty, "An account with this username already exists.");
                     return Page();
                 }
-                
+
                 var user = CreateUser();
 
-                user.Name = Input.Name; 
+                user.Name = Input.Name;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -152,7 +152,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     await _achievementService.AddNewAuthorAchievementAsync(user.Id, 1);
-                    
+
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
@@ -171,7 +171,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                     {
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
-                    else    
+                    else
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         return LocalRedirect(returnUrl);

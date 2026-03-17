@@ -25,7 +25,7 @@ public class SimulatorRepository : ISimulatorRepository
         if (!latest.HasValue) return;
 
         var entity = await _dbcontext.Latest.FirstOrDefaultAsync();
-        
+
         if (entity == null)
         {
             entity = new LatestEntity { Value = latest.Value };

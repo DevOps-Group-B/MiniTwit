@@ -8,12 +8,12 @@ namespace Chirp.Infrastructure.Chirp.Repositories;
 public class AchievementRepository : IAchievementRepository
 {
     private readonly ChirpDBContext _dbContext;
-    
+
     public AchievementRepository(ChirpDBContext dbContext)
     {
         _dbContext = dbContext;
     }
-    
+
     public async Task AddNewAuthorAchievementAsync(string authorId, int achievementId)
     {
         var authorAchievement = new AuthorAchievement()
@@ -36,7 +36,7 @@ public class AchievementRepository : IAchievementRepository
 
         return await query.FirstOrDefaultAsync();
     }
-    
+
     public async Task<List<Achievement>> GetAuthorAchievementsAsync(string authorId)
     {
         var query = (

@@ -3,11 +3,11 @@ using NUnit.Framework;
 
 namespace Chirp.Tests
 {
-/// <summary>
-/// End2End class is for testing the full functionality of the Chirp application as seen by a real user.
-/// It uses Playwright to automate the browser interactions in the test.
-/// It tests the registration, login, logout, cheep, achievements, bio update, follow, unfollow, delete account, and other functionalities  
-/// </summary>
+    /// <summary>
+    /// End2End class is for testing the full functionality of the Chirp application as seen by a real user.
+    /// It uses Playwright to automate the browser interactions in the test.
+    /// It tests the registration, login, logout, cheep, achievements, bio update, follow, unfollow, delete account, and other functionalities  
+    /// </summary>
 
     [TestFixture]
     public class End2End
@@ -86,7 +86,7 @@ namespace Chirp.Tests
         {
             // Add delay so register and first cheep achievement is not recieved at the same time 
             Thread.Sleep(3000);
-            
+
             // Submit a new cheep
             var cheepMessage = "Hello, world!";
             await page.FillAsync("input[name='FormData.Message']", cheepMessage);
@@ -204,7 +204,7 @@ namespace Chirp.Tests
         public async Task Test_follow_author()
         {
             //Temp fix for these 2 tests, just create new user, not rely on existing DB Jackeline..
-            
+
             // 1. Logout current user (End2EndUser)
             await page.GotoAsync(new Uri(client.BaseAddress!, "").ToString());
             await page.ClickAsync("button[type='submit']");
@@ -317,7 +317,8 @@ namespace Chirp.Tests
         }
 
         [Test, Order(11)]
-        public async Task Test_follow_author_after_register() {
+        public async Task Test_follow_author_after_register()
+        {
 
             //Navigate to the user timeline page of the author to follow
             var authorToFollow = username;
@@ -352,7 +353,8 @@ namespace Chirp.Tests
         }
 
         [Test, Order(13)]
-        public async Task Test_logout_after_register_previous_tests() {
+        public async Task Test_logout_after_register_previous_tests()
+        {
             // Navigate to the logout page
             var index = new Uri(client.BaseAddress!, "");
             await page.GotoAsync(index.ToString());
@@ -367,7 +369,7 @@ namespace Chirp.Tests
             var currentUrl = page.Url;
             NUnit.Framework.Assert.That(currentUrl, Is.EqualTo(new Uri(client.BaseAddress!, "/Identity/Account/Logout").ToString()));
         }
-    
+
 
         [Test, Order(14)]
         public async Task login_followed_user()

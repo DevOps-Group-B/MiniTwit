@@ -11,21 +11,21 @@ namespace Chirp.Web.Pages.Base;
 /// </summary>
 public class BaseCheepTimelinePage : BaseCheepDisplayPage
 {
-    [BindProperty] 
+    [BindProperty]
     public CheepFormTextModel FormData { get; set; } = null!;
 
 
     public BaseCheepTimelinePage(ICheepService cheepService, IAuthorService authorService,
         UserManager<Author> userManager) : base(cheepService, authorService, userManager)
-    {}
+    { }
 
     public async Task<ActionResult> OnPost()
     {
         if (User.Identity?.IsAuthenticated != true) return Page();
         if (FormData.Message == null || FormData.Message.Length > 300) return Page();
         AuthenticatedAuthor = await GetAuthenticatedAuthor();
-        if(AuthenticatedAuthor == null) return Page();
-        
+        if (AuthenticatedAuthor == null) return Page();
+
         await _cheepService.PostCheepAsync(new Cheep
         {
             AuthorId = AuthenticatedAuthor.Id,
@@ -40,7 +40,7 @@ public class BaseCheepTimelinePage : BaseCheepDisplayPage
     {
         if (User.Identity?.IsAuthenticated != true) return Page();
         AuthenticatedAuthor = await GetAuthenticatedAuthor();
-        if(AuthenticatedAuthor == null) return Page();
+        if (AuthenticatedAuthor == null) return Page();
 
         if (targetAuthorId == AuthenticatedAuthor.Id) return Page();
 
@@ -48,13 +48,13 @@ public class BaseCheepTimelinePage : BaseCheepDisplayPage
 
         return RedirectToPage();
     }
-    
+
     public async Task<ActionResult> OnPostUnfollowAuthor(string targetAuthorId)
     {
         if (User.Identity?.IsAuthenticated != true) return Page();
         AuthenticatedAuthor = await GetAuthenticatedAuthor();
-        if(AuthenticatedAuthor == null) return Page();
-        
+        if (AuthenticatedAuthor == null) return Page();
+
         if (targetAuthorId == AuthenticatedAuthor.Id) return Page();
 
         await _authorService.UnfollowAuthorAsync(AuthenticatedAuthor.Id, targetAuthorId);
@@ -62,11 +62,13 @@ public class BaseCheepTimelinePage : BaseCheepDisplayPage
         return RedirectToPage();
     }
 
-    public async Task PopulateFollows(){
+    public async Task PopulateFollows()
+    {
         foreach (var cheep in Cheeps)
         {
             var targetAuthorId = cheep.AuthorId;
-            if(Follows.ContainsKey(targetAuthorId)){
+            if (Follows.ContainsKey(targetAuthorId))
+            {
                 continue;
             }
             var isFollowing = await _authorService.IsFollowingAsync(AuthenticatedAuthor!.Id, targetAuthorId);

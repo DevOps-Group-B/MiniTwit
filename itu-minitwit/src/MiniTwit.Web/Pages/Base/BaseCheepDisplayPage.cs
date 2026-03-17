@@ -33,10 +33,10 @@ public class BaseCheepDisplayPage : PageModel
     public async Task<AuthorDTO?> GetAuthenticatedAuthor()
     {
         if (!User.Identity!.IsAuthenticated) return null;
-        
+
         var email = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
         if (email == null) return null;
-        
+
         var author = await _authorService.GetAuthorByEmailAsync(email);
         return author;
     }

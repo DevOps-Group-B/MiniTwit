@@ -18,12 +18,12 @@ public class CheepService : ICheepService
         _cheepRepository = cheepRepository;
         _authorRepository = authorRepository;
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAsync(int page)
     {
         return await _cheepRepository.GetCheepsAsync(page);
     }
-    
+
     public async Task<(List<CheepDTO> cheeps, int totalCheepCount)> GetCheepsAmountAsync(int numberOfCheeps)
     {
         return await _cheepRepository.GetCheepsAmountAsync(numberOfCheeps);

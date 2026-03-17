@@ -10,3 +10,4 @@ public class ErrorResponseDTO
     [JsonPropertyName("error_msg")]
     public string ErrorMsg { get; set; }
 }
+

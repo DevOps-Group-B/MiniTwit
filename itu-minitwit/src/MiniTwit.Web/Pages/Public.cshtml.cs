@@ -11,8 +11,8 @@ namespace Chirp.Web.Pages;
 /// </summary>
 public class PublicModel : BaseCheepTimelinePage
 {
-    public PublicModel(ICheepService cheepService, IAuthorService authorService, UserManager<Author> userManager) 
-        : base(cheepService, authorService, userManager) {}
+    public PublicModel(ICheepService cheepService, IAuthorService authorService, UserManager<Author> userManager)
+        : base(cheepService, authorService, userManager) { }
 
     public async Task<ActionResult> OnGet()
     {
@@ -21,10 +21,11 @@ public class PublicModel : BaseCheepTimelinePage
         (Cheeps, CheepCount) = await _cheepService.GetCheepsAsync(PageNumber);
         AuthenticatedAuthor = await GetAuthenticatedAuthor();
 
-        if(User.Identity!.IsAuthenticated && AuthenticatedAuthor != null){
+        if (User.Identity!.IsAuthenticated && AuthenticatedAuthor != null)
+        {
             await PopulateFollows();
         }
-        
+
         return Page();
     }
 }

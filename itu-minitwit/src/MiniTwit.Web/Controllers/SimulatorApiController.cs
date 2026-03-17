@@ -67,12 +67,12 @@ public class SimulatorApiController : ControllerBase
         else if (string.IsNullOrEmpty(payload.Email) || !payload.Email.Contains("@")) error = "invalid email";
         else if (string.IsNullOrEmpty(payload.Pwd)) error = "password missing";
         else if (await _authorService.GetAuthorByNameAsync(payload.Username) != null) error = "username already taken";
-        
+
         if (error != null)
         {
             return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
         }
-        
+
         var user = new Author
         {
             UserName = payload.Username,
@@ -82,14 +82,14 @@ public class SimulatorApiController : ControllerBase
             Followers = new List<AuthorFollower>(),
             Following = new List<AuthorFollower>()
         };
-        
+
         var result = await _userManager.CreateAsync(user, payload.Pwd!);
-        
+
         if (result.Succeeded)
         {
             return NoContent(); // 204 No Content
         }
-        
+
         error = string.Join(", ", result.Errors.Select(e => e.Description));
         return BadRequest(new ErrorResponseDTO { Status = 400, ErrorMsg = error });
     }
@@ -102,42 +102,46 @@ public class SimulatorApiController : ControllerBase
     public async Task<IActionResult> GetPublicMessages([FromQuery] int no = 100, [FromQuery] int? latest = null)
     {
         await UpdateLatest(latest);
-        
-        if (!IsAuthorized()) 
+
+        if (!IsAuthorized())
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-        
+
         var (messages, _) = await _cheepService.GetCheepsAmountAsync(no);
 
         var dtos = new List<MessageDTO>();
-        
-        foreach(var m in messages) {
-            dtos.Add(new MessageDTO {
+
+        foreach (var m in messages)
+        {
+            dtos.Add(new MessageDTO
+            {
                 Content = m.Message,
                 PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
             });
         }
-        
-        return Ok(dtos); 
+
+        return Ok(dtos);
     }
 
     [HttpGet("msgs/{username}")]
     public async Task<IActionResult> GetUserMessages(string username, [FromQuery] int no = 100, [FromQuery] int? latest = null)
     {
         await UpdateLatest(latest);
-        
-        if (!IsAuthorized()) 
+
+        if (!IsAuthorized())
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-        
+
         var user = await _authorService.GetAuthorByNameAsync(username);
         if (user == null) return StatusCode(404, string.Empty);
-        
+
         var (messages, _) = await _cheepService.GetCheepsFromAuthorAmountAsync(no, user.Id);
-        
+
         var dtos = new List<MessageDTO>();
-        
-        foreach(var m in messages) {
-            dtos.Add(new MessageDTO {
+
+        foreach (var m in messages)
+        {
+            dtos.Add(new MessageDTO
+            {
                 Content = m.Message,
                 PubDate = m.Timestamp.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 User = m.AuthorName
@@ -151,10 +155,10 @@ public class SimulatorApiController : ControllerBase
     public async Task<IActionResult> PostMessage(string username, [FromBody] PostMessageDTO payload, [FromQuery] int? latest = null)
     {
         await UpdateLatest(latest);
-        
-        if (!IsAuthorized()) 
+
+        if (!IsAuthorized())
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-        
+
         var user = await _authorService.GetAuthorByNameAsync(username);
         if (user == null) return StatusCode(404, string.Empty);
 
@@ -164,7 +168,7 @@ public class SimulatorApiController : ControllerBase
             AuthorId = user.Id,
             TimeStamp = DateTime.UtcNow
         };
-        
+
         await _cheepService.PostCheepAsync(cheep);
 
         return NoContent(); // 204 No Content
@@ -178,15 +182,15 @@ public class SimulatorApiController : ControllerBase
     public async Task<IActionResult> GetFollowers(string username, [FromQuery] int no = 100, [FromQuery] int? latest = null)
     {
         await UpdateLatest(latest);
-        
-        if (!IsAuthorized()) 
+
+        if (!IsAuthorized())
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
-        
+
         var user = await _authorService.GetAuthorByNameAsync(username);
         if (user == null) return StatusCode(404, string.Empty);
-        
+
         var followingNames = await _authorService.GetFollowingAmountAsync(no, user.Id);
-        
+
         return Ok(new FollowsResponseDTO { Follows = followingNames });
     }
 
@@ -194,8 +198,8 @@ public class SimulatorApiController : ControllerBase
     public async Task<IActionResult> FollowUser(string username, [FromBody] FollowActionDTO payload, [FromQuery] int? latest = null)
     {
         await UpdateLatest(latest);
-        
-        if (!IsAuthorized()) 
+
+        if (!IsAuthorized())
             return StatusCode(403, new ErrorResponseDTO { Status = 403, ErrorMsg = "You are not authorized to use this resource!" });
 
         var user = await _authorService.GetAuthorByNameAsync(username);
@@ -205,14 +209,14 @@ public class SimulatorApiController : ControllerBase
         {
             var userToFollow = await _authorService.GetAuthorByNameAsync(payload.Follow);
             if (userToFollow == null) return StatusCode(404, string.Empty);
-            
+
             await _authorService.FollowAuthorAsync(user.Id, userToFollow.Id);
         }
         else if (!string.IsNullOrEmpty(payload.Unfollow))
         {
             var userToUnfollow = await _authorService.GetAuthorByNameAsync(payload.Unfollow);
             if (userToUnfollow == null) return StatusCode(404, string.Empty);
-            
+
             await _authorService.UnfollowAuthorAsync(user.Id, userToUnfollow.Id);
         }
 
