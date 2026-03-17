@@ -1,0 +1,36 @@
+# top-most EditorConfig file
+root = true
+
+# All files
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# files
+[*.cs]
+# Sort using directives
+dotnet_sort_system_directives_first = true
+
+# Avoid "this." unless necessary
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+# Implicit and explicit types
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# Modifier preferences
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
+
+# Newline settings
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true

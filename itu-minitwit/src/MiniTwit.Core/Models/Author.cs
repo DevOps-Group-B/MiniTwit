@@ -10,16 +10,16 @@ public class Author : IdentityUser
 
     [Required]
     public required string Name { get; set; }
-    
+
     [StringLength(300)]
     public string? Bio { get; set; }
-    
+
     [Required]
     public required ICollection<AuthorFollower> Followers { get; set; }
-    
+
     [Required]
     public required ICollection<AuthorFollower> Following { get; set; }
 
-    [Required] 
+    [Required]
     public ICollection<AuthorAchievement> AuthorAchievements { get; set; } = new List<AuthorAchievement>();
 }

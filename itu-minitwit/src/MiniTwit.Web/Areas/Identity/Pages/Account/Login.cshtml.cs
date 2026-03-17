@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using Chirp.Core.Models;
 using Chirp.Core.Services;
 using Chirp.Infrastructure.Chirp.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -121,7 +121,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     var author = await _authorService.GetAuthorByEmailAsync(Input.Email);
-                    if(author != null) returnUrl = $"/{author.Name}";
+                    if (author != null) returnUrl = $"/{author.Name}";
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }

@@ -44,6 +44,23 @@ jobs:
         working-directory: itu-minitwit
         run: dotnet restore
 
+      - name: C# Quality Gate (Format & Analyzers)
+        working-directory: itu-minitwit
+        run: |
+          dotnet format style --verify-no-changes
+          dotnet format analyzers --verify-no-changes
+
+      - name: Dockerfile Quality Gate (hadolint)
+        run: |
+          docker run --rm -i hadolint/hadolint < itu-minitwit/Dockerfile
+          docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/prometheus/Dockerfile
+          docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/grafana/Dockerfile
+
+      - name: Ansible Quality Gate (ansible-lint)
+        run: |
+          pipx install ansible-lint
+          ansible-lint ansible/playbook.yml
+
       - name: Build project
         working-directory: itu-minitwit
         run: dotnet build --no-restore

@@ -8,9 +8,9 @@ using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
-using Prometheus;
 using Minitwit.Services;
+using Prometheus;
+using Serilog;
 
 /// <summary>
 /// Program class is the entry point for the Chirp application.
@@ -53,14 +53,14 @@ string? connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTI
 if (!string.IsNullOrEmpty(connectionString))
 {
     // Production: Use PostgreSQL
-    builder.Services.AddDbContext<ChirpDBContext>(options => 
+    builder.Services.AddDbContext<ChirpDBContext>(options =>
         options.UseNpgsql(connectionString));
 }
 else
 {
     // Development: Fall back to SQLite
     string dbPath = Path.Combine(Path.GetTempPath(), "minitwit.db");
-    builder.Services.AddDbContext<ChirpDBContext>(options => 
+    builder.Services.AddDbContext<ChirpDBContext>(options =>
         options.UseSqlite($"Data Source={dbPath}"));
 }
 
@@ -99,7 +99,7 @@ if (clientId != null && clientSecret != null)
             o.ClientSecret = clientSecret;
             o.CallbackPath = "/signin-github";
             o.Scope.Add("user:email");
-        });   
+        });
 }
 
 var app = builder.Build();
@@ -172,12 +172,12 @@ using (var scope = app.Services.CreateScope())
     var cheepService = services.GetRequiredService<ICheepService>();
     var metricsService = services.GetRequiredService<IMetricsService>();
 
-    try 
+    try
     {
         var totalUsers = await userManager.Users.CountAsync();
         var totalCheeps = await cheepService.GetTotalCheepsAsync();
         var cheepsPerUser = totalUsers > 0 ? (float)totalCheeps / totalUsers : 0;
-        
+
         metricsService.SetTotalUsers(totalUsers);
         metricsService.SetTotalCheeps(totalCheeps);
         metricsService.SetCheepsPerUsers(cheepsPerUser);

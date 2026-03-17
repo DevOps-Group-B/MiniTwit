@@ -8,7 +8,7 @@ namespace Util;
 /// </summary>
 public class Util
 {
-   
+
     public static async Task<ChirpDBContext> CreateInMemoryDatabase()
     {
         // Create a new database in memory
@@ -17,9 +17,9 @@ public class Util
         var builder = new DbContextOptionsBuilder<ChirpDBContext>().UseSqlite(connection);
 
         var context = new ChirpDBContext(builder.Options);
-        await context.Database.EnsureCreatedAsync(); 
+        await context.Database.EnsureCreatedAsync();
 
-       
+
         await context.SaveChangesAsync();
 
         return context;

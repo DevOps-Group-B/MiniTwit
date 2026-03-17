@@ -13,13 +13,13 @@ using Chirp.Core.Models;
 using Chirp.Core.Services;
 using Chirp.Infrastructure.Chirp.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Chirp.Web.Areas.Identity.Pages.Account
 {
@@ -92,12 +92,12 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             public string Name { get; set; }
-            
+
             [Required]
             [EmailAddress]
             public string Email { get; set; }
         }
-        
+
         public IActionResult OnGet() => RedirectToPage("./Login");
 
         public IActionResult OnPost(string provider, string returnUrl = null)
@@ -109,7 +109,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
         }
 
         public async Task<IActionResult> OnGetCallbackAsync(string returnUrl = null, string remoteError = null)
-        { 
+        {
             returnUrl = returnUrl ?? Url.Content("~/");
             if (remoteError != null)
             {
@@ -122,7 +122,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                 ErrorMessage = "Error loading external login information.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
-            
+
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
@@ -131,7 +131,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                 if (authorEmail != null)
                 {
                     var author = await _authorService.GetAuthorByEmailAsync(authorEmail);
-                    if(author != null) returnUrl = $"/{author.Name}";
+                    if (author != null) returnUrl = $"/{author.Name}";
                 }
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
                 return LocalRedirect(returnUrl);
@@ -140,17 +140,17 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
             {
                 return RedirectToPage("./Lockout");
             }
-            
+
             // Check if email already exists
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var username = info.Principal.FindFirstValue(ClaimTypes.Name);
-        
+
             if (email == null || username == null)
             {
                 ErrorMessage = "Error loading external login information. Missing email or username.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
-            
+
             // Check for existing user with this email
             var existingUserWithEmail = await _userManager.FindByEmailAsync(email);
             if (existingUserWithEmail != null)
@@ -166,21 +166,21 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                 ErrorMessage = "An account with this username already exists.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
-            
+
             // Create user
             var user = CreateUser();
-            
+
             user.Name = username;
-        
+
             await _userStore.SetUserNameAsync(user, email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, email, CancellationToken.None);
-        
+
             var createResult = await _userManager.CreateAsync(user);
-            
+
             if (createResult.Succeeded)
             {
                 await _achievementService.AddNewAuthorAchievementAsync(user.Id, 1);
-                
+
                 createResult = await _userManager.AddLoginAsync(user, info);
                 if (createResult.Succeeded)
                 {
@@ -189,7 +189,7 @@ namespace Chirp.Web.Areas.Identity.Pages.Account
                     // Rest of the existing code remains the same...
                 }
             }
-            
+
             return Page();
         }
 

@@ -19,12 +19,12 @@ public class AuthorRepository : IAuthorRepository
         _dbContext = dbContext;
         _achievementRepository = achievementRepository;
     }
-    
+
     public async Task<AuthorDTO?> GetAuthorByNameAsync(string name)
     {
         var query = from a in _dbContext.Authors
-            where a.Name == name
-            select new AuthorDTO { Id = a.Id, Name = a.Name, Email = a.Email, Bio = a.Bio };
+                    where a.Name == name
+                    select new AuthorDTO { Id = a.Id, Name = a.Name, Email = a.Email, Bio = a.Bio };
 
         return await query.FirstOrDefaultAsync();
     }
@@ -59,7 +59,7 @@ public class AuthorRepository : IAuthorRepository
     {
         var hasAchievementFollow = await _dbContext.AuthorAchievements.AnyAsync(a => a.AuthorId == currentAuthorId && a.AchievementId == 3);
         var hasAchievementFollowed = await _dbContext.AuthorAchievements.AnyAsync(a => a.AuthorId == targetAuthorId && a.AchievementId == 4);
-        
+
         var followRelation = new AuthorFollower
         {
             FollowerId = currentAuthorId,
@@ -96,39 +96,39 @@ public class AuthorRepository : IAuthorRepository
             from a in _dbContext.AuthorFollowers
             where a.FollowerId == authorId
             select a.Following.Name);
-        
+
         return await query.ToListAsync();
     }
-    
+
     public async Task<List<string>> GetFollowingAmountAsync(int numberOfFollowing, string authorId)
     {
         var query = (
             from a in _dbContext.AuthorFollowers
             where a.FollowerId == authorId
             select a.Following.Name);
-        
+
         return await query.Take(numberOfFollowing).ToListAsync();
     }
-    
+
     public async Task<List<string>> GetFollowersAsync(string authorId)
     {
         var query = (
             from a in _dbContext.AuthorFollowers
             where a.FollowingId == authorId
             select a.Follower.Name);
-        
+
         return await query.ToListAsync();
     }
-    
+
     public async Task<string?> UpdateBioAsync(string authorId, string? newBio)
     {
         var authorFromDb = await _dbContext.Authors.FindAsync(authorId);
         if (authorFromDb == null) return null;
-        
+
         authorFromDb.Bio = newBio;
-        
+
         _dbContext.Authors.Update(authorFromDb);
-        
+
         await _dbContext.SaveChangesAsync();
 
         return newBio;

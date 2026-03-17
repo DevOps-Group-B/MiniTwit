@@ -30,38 +30,44 @@ public class UserTimelineModel : BaseCheepTimelinePage
 
         var authorRequest = await _authorService.GetAuthorByNameAsync(author);
         if (authorRequest == null) return Page();
-        
+
         BioText.Bio = authorRequest.Bio;
 
-        if(User.Identity!.IsAuthenticated && AuthenticatedAuthor != null){
-            if(AuthenticatedAuthor.Name == author){
+        if (User.Identity!.IsAuthenticated && AuthenticatedAuthor != null)
+        {
+            if (AuthenticatedAuthor.Name == author)
+            {
                 (Cheeps, CheepCount) = await _cheepService.GetCheepsFromUserTimelineAsync(PageNumber, authorRequest.Id);
-            } else {
+            }
+            else
+            {
                 (Cheeps, CheepCount) = await _cheepService.GetCheepsFromAuthorAsync(PageNumber, authorRequest.Id);
             }
             await PopulateFollows();
-        } else {
+        }
+        else
+        {
             (Cheeps, CheepCount) = await _cheepService.GetCheepsFromAuthorAsync(PageNumber, authorRequest.Id);
         }
 
         return Page();
     }
-    
+
     public async Task<ActionResult> OnPostUpdateBio(string? newBio)
     {
         if (User.Identity?.IsAuthenticated != true) return Page();
         AuthenticatedAuthor = await GetAuthenticatedAuthor();
-        if(AuthenticatedAuthor == null) return Page();
-        
+        if (AuthenticatedAuthor == null) return Page();
+
         newBio = newBio?.Trim();
-        
+
         if (newBio?.Length > 300)
         {
             return Page();
         }
 
         await _authorService.UpdateBioAsync(AuthenticatedAuthor.Id, newBio);
-        
+
         return RedirectToPage();
     }
 }

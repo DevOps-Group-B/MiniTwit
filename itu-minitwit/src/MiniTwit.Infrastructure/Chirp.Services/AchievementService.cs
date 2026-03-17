@@ -15,12 +15,12 @@ public class AchievementService : IAchievementService
     {
         _achievementRepository = achievementRepository;
     }
-    
+
     public async Task AddNewAuthorAchievementAsync(string authorId, int achievementId)
     {
         await _achievementRepository.AddNewAuthorAchievementAsync(authorId, achievementId);
     }
-    
+
     public async Task<Achievement?> GetAuthorNewestAchievementAsync(string authorId)
     {
         return await _achievementRepository.GetAuthorNewestAchievementAsync(authorId);
