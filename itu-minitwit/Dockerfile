@@ -7,12 +7,12 @@ COPY . .
 # 2. Move into the Web project folder
 WORKDIR /source/src/MiniTwit.Web
 
-# 3. Restore specifically for this project
-RUN dotnet restore
-
+# 3. Restore specifically for this project and then
 # 4. Publish
 # We explicitly point to the .csproj
+RUN dotnet restore && \
 RUN dotnet publish MiniTwit.Web.csproj -c Release -o /app
+
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
