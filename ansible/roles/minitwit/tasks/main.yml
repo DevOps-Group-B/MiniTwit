@@ -37,6 +37,7 @@
   community.docker.docker_network:
     name: minitwit_network
     state: present
+    driver: bridge
 
 - name: Log in to Docker Hub
   community.docker.docker_login:
