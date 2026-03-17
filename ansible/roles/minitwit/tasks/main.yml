@@ -24,13 +24,6 @@
     state: absent
   become: true
 
-- name: Create keyrings directory
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-  become: true
-
 - name: Install prerequisite packages
   ansible.builtin.apt:
     name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip, gnupg]
