@@ -1,5 +1,6 @@
 services:
   minitwit:
+    container_name: minitwit
     build:
       context: ./itu-minitwit
       dockerfile: Dockerfile
@@ -11,6 +12,27 @@ services:
     depends_on:
       - grafana
       - prometheus
+      - loki
+      - alloy
+  
+  grafana:
+    build: 
+      dockerfile: ./Dockerfile
+      context: ./itu-minitwit/monitoring/grafana
+    image: grafana_image
+    container_name: itu-minitwit-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
 
   prometheus:
     build: 
@@ -21,21 +43,28 @@ services:
     ports:
       - "9090:9090"
 
-  grafana:
-    build: 
-      dockerfile: ./Dockerfile
-      context: ./itu-minitwit/monitoring/grafana
-    image: grafana_image
-    container_name: itu-minitwit-grafana
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: itu-minitwit-loki
+    command: -config.file=/etc/loki/config.yml
     ports:
-      - "3000:3000"
+      - "3100:3100"
     volumes:
-      - grafana-storage:/var/lib/grafana
-    environment:
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
-      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
-      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      - ./itu-minitwit/monitoring/loki/config.yml:/etc/loki/config.yml:ro
+      - loki-storage:/loki
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: itu-minitwit-alloy
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./itu-minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
 volumes:
   grafana-storage: {}
+  loki-storage: {}

@@ -41,6 +41,25 @@ docker-compose down
 ```
 > ⚠️ **Note:** This connects directly to the **production database**. Any cheeps or users you create will be real.
 
+### Logging Stack (Loki + Alloy)
+The Docker Compose setup includes a Grafana Loki logging stack with Grafana Alloy:
+
+* `alloy` tails Docker container logs from `/var/lib/docker/containers/*/*-json.log`
+* Alloy parses JSON log records and ships them to `loki`
+* Grafana auto-provisions Loki as a datasource (`uid: loki`)
+
+After `docker compose up`, open Grafana Explore and query logs, for example:
+
+```logql
+{job="docker"}
+```
+
+To focus on HTTP request logs from the web app, try:
+
+```logql
+{job="docker"} |= "HTTP"
+```
+
 ---
 
 ### 3. Manual Docker (Single Container)
