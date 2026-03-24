@@ -84,6 +84,14 @@
     mode: '0644'
   become: true
 
+- name: Validate Alloy Docker log bind mount path
+  ansible.builtin.assert:
+    that:
+      - alloy_docker_containers_host_path == '/var/lib/docker/containers'
+    fail_msg: >-
+      Unsafe Alloy log mount path '{{ alloy_docker_containers_host_path }}'.
+      Only '/var/lib/docker/containers' is allowed.
+
 - name: Log in to Docker Hub
   community.docker.docker_login:
     username: "{{ dockerhub_user }}"
@@ -137,11 +145,18 @@
     recreate: true
     pull: true
     command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opts:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
     ports:
       - "12345:12345"
     volumes:
       - "/opt/minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro"
-      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "{{ alloy_docker_containers_host_path }}:/var/lib/docker/containers:ro"
     networks:
       - name: minitwit_network
 
