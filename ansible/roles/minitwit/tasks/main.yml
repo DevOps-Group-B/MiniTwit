@@ -35,7 +35,9 @@
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+    owner: root
+    group: _apt
+    mode: '0640'
     force: true
   become: true
 
@@ -74,14 +76,14 @@
   ansible.builtin.copy:
     src: monitoring/loki/config.yml
     dest: /opt/minitwit/monitoring/loki/config.yml
-    mode: '0644'
+    mode: '0640'
   become: true
 
 - name: Copy Alloy production config
   ansible.builtin.copy:
     src: monitoring/alloy/config.alloy
     dest: /opt/minitwit/monitoring/alloy/config.alloy
-    mode: '0644'
+    mode: '0640'
   become: true
 
 - name: Validate Alloy Docker log bind mount path
