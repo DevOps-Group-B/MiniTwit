@@ -42,6 +42,10 @@ services:
     container_name: itu-minitwit-prometheus
     ports:
       - "9090:9090"
+    networks:
+      default:
+        aliases:
+          - prometheus
 
   loki:
     image: grafana/loki:3.5.0
