@@ -35,7 +35,9 @@
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+    owner: root
+    group: _apt
+    mode: '0640'
     force: true
   become: true
 
@@ -58,6 +60,40 @@
     state: present
     driver: bridge
 
+- name: Create monitoring config directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/minitwit
+    - /opt/minitwit/monitoring
+    - /opt/minitwit/monitoring/loki
+    - /opt/minitwit/monitoring/alloy
+  become: true
+
+- name: Copy Loki production config
+  ansible.builtin.copy:
+    src: monitoring/loki/config.yml
+    dest: /opt/minitwit/monitoring/loki/config.yml
+    mode: '0640'
+  become: true
+
+- name: Copy Alloy production config
+  ansible.builtin.copy:
+    src: monitoring/alloy/config.alloy
+    dest: /opt/minitwit/monitoring/alloy/config.alloy
+    mode: '0640'
+  become: true
+
+- name: Validate Alloy Docker log bind mount path
+  ansible.builtin.assert:
+    that:
+      - alloy_docker_containers_host_path == '/var/lib/docker/containers'
+    fail_msg: >-
+      Unsafe Alloy log mount path '{{ alloy_docker_containers_host_path }}'.
+      Only '/var/lib/docker/containers' is allowed.
+
 - name: Log in to Docker Hub
   community.docker.docker_login:
     username: "{{ dockerhub_user }}"
@@ -75,6 +111,54 @@
     pull: true
     ports:
       - "9090:9090"
+    networks:
+      - name: minitwit_network
+
+# --- Deploy Loki ---
+- name: Create Loki volume
+  community.docker.docker_volume:
+    name: loki-storage
+    state: present
+
+- name: Pull and Run Loki Container
+  community.docker.docker_container:
+    name: "itu-minitwit-loki"
+    image: "grafana/loki:3.5.0"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - "/opt/minitwit/monitoring/loki/config.yml:/etc/loki/config.yml:ro"
+      - "loki-storage:/loki"
+    networks:
+      - name: minitwit_network
+
+# --- Deploy Alloy ---
+- name: Pull and Run Alloy Container
+  community.docker.docker_container:
+    name: "itu-minitwit-alloy"
+    image: "grafana/alloy:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opts:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    ports:
+      - "12345:12345"
+    volumes:
+      - "/opt/minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro"
+      - "{{ alloy_docker_containers_host_path }}:/var/lib/docker/containers:ro"
     networks:
       - name: minitwit_network
 
