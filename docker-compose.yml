@@ -56,7 +56,7 @@ services:
   alloy:
     image: grafana/alloy:latest
     container_name: itu-minitwit-alloy
-    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/tmp/alloy /etc/alloy/config.alloy
     read_only: true
     cap_drop:
       - ALL
