@@ -136,6 +136,8 @@
       - "loki-storage:/loki"
     networks:
       - name: minitwit_network
+        aliases:
+          - loki
 
 # --- Deploy Alloy ---
 - name: Pull and Run Alloy Container
