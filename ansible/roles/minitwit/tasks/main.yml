@@ -113,6 +113,8 @@
       - "9090:9090"
     networks:
       - name: minitwit_network
+        aliases:
+          - prometheus
 
 # --- Deploy Loki ---
 - name: Create Loki volume
