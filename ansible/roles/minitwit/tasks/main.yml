@@ -137,10 +137,16 @@
     recreate: true
     pull: true
     command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opts:
+      - no-new-privileges:true
     ports:
       - "12345:12345"
     volumes:
       - "/opt/minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro"
+      # Required for Docker JSON log tailing; bind is read-only.
       - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
     networks:
       - name: minitwit_network

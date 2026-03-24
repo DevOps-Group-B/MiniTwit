@@ -57,11 +57,17 @@ services:
     image: grafana/alloy:latest
     container_name: itu-minitwit-alloy
     command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - loki
     ports:
       - "12345:12345"
     volumes:
+      # Required for Docker JSON log tailing; bind is read-only.
       - ./itu-minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
