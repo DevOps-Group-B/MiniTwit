@@ -44,7 +44,7 @@ services:
       - "9090:9090"
 
   loki:
-    image: grafana/loki:2.9.8
+    image: grafana/loki:3.5.0
     container_name: itu-minitwit-loki
     command: -config.file=/etc/loki/config.yml
     ports:
