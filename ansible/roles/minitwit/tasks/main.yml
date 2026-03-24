@@ -74,6 +74,8 @@
   ansible.builtin.copy:
     src: monitoring/loki/config.yml
     dest: /opt/minitwit/monitoring/loki/config.yml
+    owner: "{{ loki_config_uid }}"
+    group: "{{ loki_config_gid }}"
     mode: '0640'
   become: true
 
