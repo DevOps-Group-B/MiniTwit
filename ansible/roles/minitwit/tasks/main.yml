@@ -58,6 +58,16 @@
     state: present
     driver: bridge
 
+- name: Create Nginx and ACME volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nginx-certs
+    - nginx-vhost
+    - nginx-html
+    - acme
+
 - name: Create monitoring config directories
   ansible.builtin.file:
     path: "{{ item }}"
@@ -203,12 +213,49 @@
     restart_policy: always
     recreate: true
     pull: true
-    ports:
-      - "{{ host_port }}:{{ app_port }}"
     env:
       POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
+      VIRTUAL_HOST: "{{ domain_name }}"
+      VIRTUAL_PORT: "{{ app_port }}"
+      LETSENCRYPT_HOST: "{{ domain_name }}"
+      LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
     networks:
       - name: minitwit_network
+
+- name: Pull and Run Nginx Proxy Container
+  community.docker.docker_container:
+    name: "itu-minitwit-nginx-proxy"
+    image: "nginxproxy/nginx-proxy:1.6"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "nginx-certs:/etc/nginx/certs:ro"
+      - "nginx-vhost:/etc/nginx/vhost.d"
+      - "nginx-html:/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+
+- name: Pull and Run ACME Companion Container
+  community.docker.docker_container:
+    name: "itu-minitwit-acme-companion"
+    image: "nginxproxy/acme-companion:2.5"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    env:
+      NGINX_PROXY_CONTAINER: "itu-minitwit-nginx-proxy"
+      DEFAULT_EMAIL: "{{ letsencrypt_email }}"
+    volumes:
+      - "nginx-certs:/etc/nginx/certs"
+      - "nginx-vhost:/etc/nginx/vhost.d"
+      - "nginx-html:/usr/share/nginx/html"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "acme:/etc/acme.sh"
 
 - name: Cleanup dangling images
   community.docker.docker_prune:
