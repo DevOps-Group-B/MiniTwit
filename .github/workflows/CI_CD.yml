@@ -23,7 +23,7 @@ env:
   IMAGE_NAME: minitwitimage
   CONTAINER_NAME: minitwit
   APP_PORT: "5273"
-  HOST_PORT: "80"
+  HOST_PORT: "8080"
 
 jobs:
   build_test_and_deploy:
