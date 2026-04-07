@@ -23,7 +23,7 @@ env:
   IMAGE_NAME: minitwitimage
   CONTAINER_NAME: minitwit
   APP_PORT: "5273"
-  HOST_PORT: "80"
+  HOST_PORT: "8080"
 
 jobs:
   build_test_and_deploy:
@@ -125,4 +125,4 @@ jobs:
             server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           options: |
-            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} POSTGRES_CONNECTION_STRING='${{ secrets.POSTGRES_CONNECTION_STRING }}'"
+            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} host_port=${{ env.HOST_PORT }} POSTGRES_CONNECTION_STRING='${{ secrets.POSTGRES_CONNECTION_STRING }}'"
