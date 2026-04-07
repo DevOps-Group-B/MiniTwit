@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "80:5273"
+      - "8080:5273"
     environment:
       POSTGRES_CONNECTION_STRING: ${POSTGRES_CONNECTION_STRING}
     depends_on:

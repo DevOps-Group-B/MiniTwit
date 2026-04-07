@@ -7,7 +7,7 @@
     image_name: "minitwitimage"
     container_name: "minitwit"
     app_port: "5273"
-    host_port: "80"
+    host_port: "8080"
     db_volume: "minitwit_db_volume"
     # These fall back to 'latest' if run locally via Vagrant
     dockerhub_user: "{{ dockerhub_username | default('sn3ke') }}"
