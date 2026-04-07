@@ -206,7 +206,7 @@
     ports:
       - "{{ host_port }}:{{ app_port }}"
     env:
-      POSTGRES_CONNECTION_STRING: "{{ POSTGRES_CONNECTION_STRING }}"
+      POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
     networks:
       - name: minitwit_network
 
