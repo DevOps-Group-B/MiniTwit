@@ -117,6 +117,8 @@ jobs:
         uses: dawidd6/action-ansible-playbook@v2
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GRAFANA_ADMIN_USER: ${{ secrets.GRAFANA_ADMIN_USER }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
         with:
           playbook: ansible/playbook.yml
           directory: ./
@@ -125,4 +127,4 @@ jobs:
             server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           options: |
-            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} host_port=${{ env.HOST_PORT }} POSTGRES_CONNECTION_STRING='${{ secrets.POSTGRES_CONNECTION_STRING }}'"
+            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} POSTGRES_CONNECTION_STRING='${{ secrets.POSTGRES_CONNECTION_STRING }}' grafana_admin_user='${{ secrets.GRAFANA_ADMIN_USER }}' grafana_admin_password='${{ secrets.GRAFANA_ADMIN_PASSWORD }}'"
