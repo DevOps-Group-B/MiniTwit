@@ -1,0 +1,5 @@
+# Upstream vulnerabilities compiled into the Prometheus v3.11.2 binary.
+# Ignored as we cannot be fix it, Prometheus needs to update their code.
+CVE-2026-32285
+CVE-2026-34040
+CVE-2026-39883
