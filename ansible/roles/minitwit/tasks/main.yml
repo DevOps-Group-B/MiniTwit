@@ -282,7 +282,6 @@
       - "acme:/etc/acme.sh"
     networks:
       - name: minitwit_network
-
 - name: Cleanup dangling images
   community.docker.docker_prune:
     images: true
