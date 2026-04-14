@@ -1,6 +1,6 @@
 # MiniTwit 
 Our links:
-Minitwit Website: http://165.227.170.149
+Minitwit Website: https://minitwit.tech, https://www.minitwit.tech/ or http://165.227.170.149
 Monitoring: http://165.227.170.149:3000
 
 ### 1. Local Setup (Vagrant + Ansible)
@@ -40,6 +40,29 @@ open http://localhost
 docker-compose down
 ```
 > ⚠️ **Note:** This connects directly to the **production database**. Any cheeps or users you create will be real.
+
+### 2b. Docker Compose with TLS Proxy
+This is an optional manual setup. The CI/CD pipeline now deploys the same containerized proxy stack through Ansible, so you do not need a separate production compose file to use the pipeline.
+
+For the production stack, Nginx and Certbot run as Docker containers using the `nginxproxy/nginx-proxy` and `nginxproxy/acme-companion` images.
+
+1. Set `DOMAIN_NAME=minitwit.tech` and `LETSENCRYPT_EMAIL=you@example.com` in `.env`.
+2. If you already installed host-level Nginx or Certbot on the server, stop them first so ports `80` and `443` are free:
+   ```bash
+   sudo systemctl stop nginx
+   sudo systemctl disable nginx
+   ```
+3. Start the production stack:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+   ```
+4. Watch the certificate container logs until issuance completes:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f acme-companion
+   ```
+5. Open `https://minitwit.tech` and confirm the lock icon.
+
+The app container listens on port `5273` internally. The proxy container owns public ports `80` and `443`, and the ACME companion handles renewal automatically.
 
 ### Logging Stack (Loki + Alloy)
 The Docker Compose setup includes a Grafana Loki logging stack with Grafana Alloy:

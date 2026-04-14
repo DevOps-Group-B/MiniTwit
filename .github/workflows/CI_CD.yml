@@ -5,9 +5,9 @@
 #    If any test fails, the pipeline halts immediately to protect the production server.
 # 3. Docker Image: If tests pass, it logs into Docker Hub, builds a new image using the GitHub run
 #    number as a tag (e.g., :45), and pushes it to the registry.
-# 4. Deployment: Connects to the DigitalOcean droplet via SSH, pulls the new image, and swaps containers.
-#    It mounts a Managed Docker Volume and passes the DB path as an environment variable so the
-#    simulator's registered users and cheeps survive the deployment.
+# 4. Deployment: Connects to the DigitalOcean droplet via SSH, updates the app container, and starts
+#    the nginx-proxy + ACME companion containers so nginx owns ports 80/443 and Let's Encrypt renewals.
+#    The app stays on the Docker network and the proxy handles TLS termination for minitwit.tech.
 
 name: CI_CD
 
@@ -23,7 +23,6 @@ env:
   IMAGE_NAME: minitwitimage
   CONTAINER_NAME: minitwit
   APP_PORT: "5273"
-  HOST_PORT: "8080"
 
 jobs:
   build_test_and_deploy:
@@ -56,6 +55,13 @@ jobs:
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/prometheus/Dockerfile
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/grafana/Dockerfile
 
+      - name: Security Static Code Analysis (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/csharp
+
       - name: Build project
         working-directory: itu-minitwit
         run: dotnet build --no-restore
@@ -81,6 +87,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --- LOAD IMAGES LOCALLY FOR SECURITY SCAN ---
+      - name: Build app image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit
+          file: ./itu-minitwit/Dockerfile
+          load: true
+          tags: local-app-image:test
+
+      - name: Trivy Vulnerability Scanner (App Image)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-app-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       # Builds the app image and tags it with both the unique GitHub run number and :latest
       - name: Build and push app image
         uses: docker/build-push-action@v6
@@ -93,6 +118,24 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
       # Build and push Prometheus image
+      - name: Build Prometheus image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/prometheus
+          file: ./itu-minitwit/monitoring/prometheus/Dockerfile
+          load: true
+          tags: local-prometheus-image:test
+
+      - name: Trivy Vulnerability Scanner (Prometheus)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-prometheus-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build and push Prometheus image
         uses: docker/build-push-action@v6
         with:
@@ -103,6 +146,24 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/prometheus_image:latest
 
       # Build and push Grafana image
+      - name: Build Grafana image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/grafana
+          file: ./itu-minitwit/monitoring/grafana/Dockerfile
+          load: true
+          tags: local-grafana-image:test
+
+      - name: Trivy Vulnerability Scanner (Grafana)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-grafana-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build and push Grafana image
         uses: docker/build-push-action@v6
         with:
@@ -127,4 +188,4 @@ jobs:
             server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           options: |
-            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} postgres_connection_string='${{ secrets.POSTGRES_CONNECTION_STRING }}' grafana_admin_user='${{ secrets.GRAFANA_ADMIN_USER }}' grafana_admin_password='${{ secrets.GRAFANA_ADMIN_PASSWORD }}'"
+            --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} postgres_connection_string='${{ secrets.POSTGRES_CONNECTION_STRING }}' grafana_admin_user='${{ secrets.GRAFANA_ADMIN_USER }}' grafana_admin_password='${{ secrets.GRAFANA_ADMIN_PASSWORD }}' domain_name='minitwit.tech' letsencrypt_email='${{ secrets.LETSENCRYPT_EMAIL }}'"

@@ -6,6 +6,7 @@ using Chirp.Infrastructure;
 using Chirp.Infrastructure.Chirp.Repositories;
 using Chirp.Infrastructure.Chirp.Services;
 using Chirp.Infrastructure.Data;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Minitwit.Services;
@@ -24,6 +25,14 @@ Log.Logger = new LoggerConfiguration()
     .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// The app runs behind nginx in production, so trust forwarded scheme and client IP headers.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Replace the default .NET logging with Serilog, configured from appsettings.json
 builder.Host.UseSerilog((context, services, config) =>
@@ -104,15 +113,25 @@ if (clientId != null && clientSecret != null)
 
 var app = builder.Build();
 
+//Nginx proxy intercepts HTTPS traffic, decrypts it and forwards to the .NET container over plain HTTP.
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+
+    if (builder.Configuration.GetValue<bool>("EnableHttpsRedirection"))
+    {
+        // Only enable HSTS when HTTPS redirection is explicitly turned on.
+        app.UseHsts();
+    }
 }
 
-app.UseHttpsRedirection();
+if (builder.Configuration.GetValue<bool>("EnableHttpsRedirection"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseHttpMetrics();
 
