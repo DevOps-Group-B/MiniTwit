@@ -3,3 +3,12 @@
 CVE-2026-32285
 CVE-2026-34040
 CVE-2026-39883
+
+# Upstream vulnerabilities from Grafana base image and bundled plugin binaries.
+# Ignored as we cannot be fix it, Grafana needs to update their code.
+CVE-2026-28390
+CVE-2026-22184
+CVE-2026-25679
+CVE-2026-27137
+CVE-2026-32280
+CVE-2026-32282
