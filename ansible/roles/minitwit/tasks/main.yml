@@ -222,6 +222,28 @@
     networks:
       - name: minitwit_network
 
+# --- One-Time Bare-Metal Nginx/Certbot Cleanup ---
+- name: Stop and disable bare-metal Nginx and Certbot services (one-time cleanup)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - nginx
+    - certbot.timer
+    - certbot
+  ignore_errors: true
+
+- name: Remove bare-metal Nginx and Certbot packages (one-time cleanup)
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - nginx-common
+      - certbot
+      - python3-certbot-nginx
+    state: absent
+    purge: true
+
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
     name: "itu-minitwit-nginx-proxy"
@@ -238,6 +260,8 @@
       - "nginx-vhost:/etc/nginx/vhost.d"
       - "nginx-html:/usr/share/nginx/html"
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
+    networks:
+      - name: minitwit_network
 
 - name: Pull and Run ACME Companion Container
   community.docker.docker_container:
@@ -256,6 +280,8 @@
       - "nginx-html:/usr/share/nginx/html"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "acme:/etc/acme.sh"
+    networks:
+      - name: minitwit_network
 
 - name: Cleanup dangling images
   community.docker.docker_prune:

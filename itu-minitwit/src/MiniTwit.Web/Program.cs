@@ -113,7 +113,7 @@ if (clientId != null && clientSecret != null)
 
 var app = builder.Build();
 
-// Read the proxy headers before any HTTPS-related middleware runs.
+//Nginx proxy intercepts HTTPS traffic, decrypts it and forwards to the .NET container over plain HTTP.
 app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.

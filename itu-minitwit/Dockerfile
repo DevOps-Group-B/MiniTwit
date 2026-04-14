@@ -1,23 +1,19 @@
+# Build Stage (stays the same)
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /source
-
-# 1. Copy everything first (simpler for multi-project debugging)
 COPY . .
-
-# 2. Move into the Web project folder
 WORKDIR /source/src/MiniTwit.Web
+RUN dotnet restore && dotnet publish -c Release -o /app
 
-# 3. Restore and Publish in one step
-RUN dotnet restore && \
-    dotnet publish MiniTwit.Web.csproj -c Release -o /app
-
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+# Stage 2: Runtime  
+# "chiseled" images have no shell and a much smaller attack surface
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled
 WORKDIR /app
 COPY --from=build /app .
 
-# Ensure the app binds to the right port and interface
+# Run as a non-privileged user (Chiseled images do this by default, but it's good to be explicit)
+USER $APP_UID
+
 ENV ASPNETCORE_URLS=http://+:5273
 EXPOSE 5273
-
 ENTRYPOINT ["dotnet", "MiniTwit.Web.dll"]
