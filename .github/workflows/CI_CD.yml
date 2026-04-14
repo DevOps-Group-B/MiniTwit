@@ -55,6 +55,13 @@ jobs:
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/prometheus/Dockerfile
           docker run --rm -i hadolint/hadolint < itu-minitwit/monitoring/grafana/Dockerfile
 
+      - name: Security Static Code Analysis (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/csharp
+
       - name: Build project
         working-directory: itu-minitwit
         run: dotnet build --no-restore
@@ -80,6 +87,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --- LOAD IMAGES LOCALLY FOR SECURITY SCAN ---
+      - name: Build app image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit
+          file: ./itu-minitwit/Dockerfile
+          load: true
+          tags: local-app-image:test
+
+      - name: Trivy Vulnerability Scanner (App Image)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-app-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       # Builds the app image and tags it with both the unique GitHub run number and :latest
       - name: Build and push app image
         uses: docker/build-push-action@v6
@@ -92,6 +118,24 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
       # Build and push Prometheus image
+      - name: Build Prometheus image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/prometheus
+          file: ./itu-minitwit/monitoring/prometheus/Dockerfile
+          load: true
+          tags: local-prometheus-image:test
+
+      - name: Trivy Vulnerability Scanner (Prometheus)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-prometheus-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build and push Prometheus image
         uses: docker/build-push-action@v6
         with:
@@ -102,6 +146,24 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/prometheus_image:latest
 
       # Build and push Grafana image
+      - name: Build Grafana image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ./itu-minitwit/monitoring/grafana
+          file: ./itu-minitwit/monitoring/grafana/Dockerfile
+          load: true
+          tags: local-grafana-image:test
+
+      - name: Trivy Vulnerability Scanner (Grafana)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-grafana-image:test'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build and push Grafana image
         uses: docker/build-push-action@v6
         with:
