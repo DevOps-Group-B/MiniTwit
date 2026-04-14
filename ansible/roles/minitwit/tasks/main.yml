@@ -126,6 +126,29 @@
         aliases:
           - prometheus
 
+- name: Pull and Run Node Exporter Container
+  community.docker.docker_container:
+    name: "itu-minitwit-node-exporter"
+    image: "prom/node-exporter:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+    pid_mode: host
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+    networks:
+      - name: minitwit_network
+        aliases:
+          - node-exporter
+
 # --- Deploy Loki ---
 - name: Create Loki volume
   community.docker.docker_volume:

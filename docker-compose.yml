@@ -49,6 +49,25 @@ services:
         aliases:
           - prometheus
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: itu-minitwit-node-exporter
+    restart: always
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      default:
+        aliases:
+          - node-exporter
+
   loki:
     image: grafana/loki:3.5.0
     container_name: itu-minitwit-loki
