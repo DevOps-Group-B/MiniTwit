@@ -215,34 +215,12 @@
     pull: true
     env:
       POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
-      VIRTUAL_HOST: "{{ domain_name }}"
+      VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }},165.227.170.149"
       VIRTUAL_PORT: "{{ app_port }}"
       LETSENCRYPT_HOST: "{{ domain_name }}"
       LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
     networks:
       - name: minitwit_network
-
-# --- One-Time Bare-Metal Nginx/Certbot Cleanup ---
-- name: Stop and disable bare-metal Nginx and Certbot services (one-time cleanup)
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: stopped
-    enabled: false
-  loop:
-    - nginx
-    - certbot.timer
-    - certbot
-  ignore_errors: true
-
-- name: Remove bare-metal Nginx and Certbot packages (one-time cleanup)
-  ansible.builtin.apt:
-    name:
-      - nginx
-      - nginx-common
-      - certbot
-      - python3-certbot-nginx
-    state: absent
-    purge: true
 
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
