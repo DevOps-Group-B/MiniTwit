@@ -1,3 +1,27 @@
+- name: Resolve deployment settings
+  ansible.builtin.set_fact:
+    local_deployment: "{{ deployment_mode == 'vagrant' }}"
+    prometheus_image_ref: "{{ 'prometheus_image:latest' if deployment_mode == 'vagrant' else dockerhub_user ~ '/prometheus_image:latest' }}"
+    grafana_image_ref: "{{ 'grafana_image:latest' if deployment_mode == 'vagrant' else dockerhub_user ~ '/grafana_image:latest' }}"
+    app_image_ref: "{{ image_name ~ ':' ~ app_version if deployment_mode == 'vagrant' else dockerhub_user ~ '/' ~ image_name ~ ':' ~ app_version }}"
+
+- name: Resolve MiniTwit container environment
+  ansible.builtin.set_fact:
+    minitwit_container_env: >-
+      {{
+        {
+          'POSTGRES_CONNECTION_STRING': postgres_connection_string,
+          'VIRTUAL_PORT': app_port
+        }
+        | combine(
+            {} if not enable_tls_proxy else {
+              'VIRTUAL_HOST': domain_name,
+              'LETSENCRYPT_HOST': domain_name,
+              'LETSENCRYPT_EMAIL': letsencrypt_email
+            }
+          )
+      }}
+
 - name: Force clear apt locks and corrupted cache
   ansible.builtin.shell: |
     rm -f /var/lib/apt/lists/lock
@@ -67,6 +91,7 @@
     - nginx-vhost
     - nginx-html
     - acme
+  when: enable_tls_proxy
 
 - name: Create monitoring config directories
   ansible.builtin.file:
@@ -108,17 +133,52 @@
   community.docker.docker_login:
     username: "{{ dockerhub_user }}"
     password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
-  when: lookup('env', 'DOCKERHUB_TOKEN') != ""
+  when:
+    - not local_deployment
+    - lookup('env', 'DOCKERHUB_TOKEN') != ""
+
+- name: Build Prometheus image locally for Vagrant
+  community.docker.docker_image:
+    name: prometheus_image
+    tag: latest
+    source: build
+    force_source: true
+    build:
+      path: "{{ playbook_dir }}/../itu-minitwit/monitoring/prometheus"
+      pull: true
+  when: local_deployment
+
+- name: Build Grafana image locally for Vagrant
+  community.docker.docker_image:
+    name: grafana_image
+    tag: latest
+    source: build
+    force_source: true
+    build:
+      path: "{{ playbook_dir }}/../itu-minitwit/monitoring/grafana"
+      pull: true
+  when: local_deployment
+
+- name: Build MiniTwit app image locally for Vagrant
+  community.docker.docker_image:
+    name: "{{ image_name }}"
+    tag: "{{ app_version }}"
+    source: build
+    force_source: true
+    build:
+      path: "{{ playbook_dir }}/../itu-minitwit"
+      pull: true
+  when: local_deployment
 
 # --- Deploy Prometheus ---
 - name: Pull and Run Prometheus Container
   community.docker.docker_container:
     name: "itu-minitwit-prometheus"
-    image: "{{ dockerhub_user }}/prometheus_image:latest"
+    image: "{{ prometheus_image_ref }}"
     state: started
     restart_policy: always
     recreate: true
-    pull: true
+    pull: "{{ not local_deployment }}"
     ports:
       - "9090:9090"
     networks:
@@ -185,11 +245,11 @@
 - name: Pull and Run Grafana Container
   community.docker.docker_container:
     name: "itu-minitwit-grafana"
-    image: "{{ dockerhub_user }}/grafana_image:latest"
+    image: "{{ grafana_image_ref }}"
     state: started
     restart_policy: always
     recreate: true
-    pull: true
+    pull: "{{ not local_deployment }}"
     ports:
       - "3000:3000"
     volumes:
@@ -208,17 +268,12 @@
 - name: Pull and Run MiniTwit Container
   community.docker.docker_container:
     name: "{{ container_name }}"
-    image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
+    image: "{{ app_image_ref }}"
     state: started
     restart_policy: always
     recreate: true
-    pull: true
-    env:
-      POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
-      VIRTUAL_HOST: "{{ domain_name }}"
-      VIRTUAL_PORT: "{{ app_port }}"
-      LETSENCRYPT_HOST: "{{ domain_name }}"
-      LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
+    pull: "{{ not local_deployment }}"
+    env: "{{ minitwit_container_env }}"
     networks:
       - name: minitwit_network
 
@@ -233,6 +288,7 @@
     - certbot.timer
     - certbot
   ignore_errors: true
+  when: enable_tls_proxy
 
 - name: Remove bare-metal Nginx and Certbot packages (one-time cleanup)
   ansible.builtin.apt:
@@ -243,6 +299,7 @@
       - python3-certbot-nginx
     state: absent
     purge: true
+  when: enable_tls_proxy
 
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
@@ -262,6 +319,7 @@
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
     networks:
       - name: minitwit_network
+  when: enable_tls_proxy
 
 - name: Pull and Run ACME Companion Container
   community.docker.docker_container:
@@ -282,6 +340,7 @@
       - "acme:/etc/acme.sh"
     networks:
       - name: minitwit_network
+  when: enable_tls_proxy
 - name: Cleanup dangling images
   community.docker.docker_prune:
     images: true

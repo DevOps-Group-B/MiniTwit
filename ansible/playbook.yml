@@ -4,15 +4,20 @@
   become: true
 
   vars:
+    deployment_mode: "{{ deployment_mode | default('production', true) }}"
     image_name: "minitwitimage"
     container_name: "minitwit"
     app_port: "5273"
     db_volume: "minitwit_db_volume"
     domain_name: "{{ domain_name | default('minitwit.tech', true) }}"
     letsencrypt_email: "{{ letsencrypt_email | default('bror@live.dk', true) }}"
-    # These fall back to 'latest' if run locally via Vagrant
+    # These fall back to local-safe defaults when run via Vagrant.
     dockerhub_user: "{{ dockerhub_username | default('sn3ke') }}"
     app_version: "{{ image_tag | default('latest') }}"
+    postgres_connection_string: "{{ postgres_connection_string | default('', true) }}"
+    grafana_admin_user: "{{ grafana_admin_user | default('admin', true) }}"
+    grafana_admin_password: "{{ grafana_admin_password | default('admin', true) }}"
+    enable_tls_proxy: "{{ enable_tls_proxy | default(deployment_mode != 'vagrant', true) }}"
 
   roles:
     - minitwit
