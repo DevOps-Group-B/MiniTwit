@@ -4,6 +4,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 3000, host: 3000
   config.vm.network "forwarded_port", guest: 9090, host: 9090
+  #Loki port
   config.vm.network "forwarded_port", guest: 3100, host: 3100
   config.vm.network "forwarded_port", guest: 12345, host: 12345
   config.ssh.insert_key = false
