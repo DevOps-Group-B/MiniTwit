@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
   do_plugin_installed = Vagrant.has_plugin?("vagrant-digitalocean")
-  do_enabled = do_plugin_installed &&
+  do_enabled = do_plugin_installed && 
                ENV["DIGITALOCEAN_TOKEN"] &&
                ENV["DIGITALOCEAN_SSH_KEY_IDS"]
 
@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     machine_config.ssh.insert_key = false
     machine_config.ssh.keep_alive = true
     machine_config.ssh.connect_timeout = 60
-
+    #
     # Install Ansible on the guest so it can provision itself.
     machine_config.vm.provision "shell", inline: <<-SHELL
       apt-get update
