@@ -14,7 +14,7 @@
           'VIRTUAL_PORT': app_port
         }
         | combine(
-            {} if not enable_tls_proxy else {
+            {} if not tls_proxy_enabled else {
               'VIRTUAL_HOST': domain_name,
               'LETSENCRYPT_HOST': domain_name,
               'LETSENCRYPT_EMAIL': letsencrypt_email
@@ -91,7 +91,7 @@
     - nginx-vhost
     - nginx-html
     - acme
-  when: enable_tls_proxy
+  when: tls_proxy_enabled
 
 - name: Create monitoring config directories
   ansible.builtin.file:
@@ -288,7 +288,7 @@
     - certbot.timer
     - certbot
   ignore_errors: true
-  when: enable_tls_proxy
+  when: tls_proxy_enabled
 
 - name: Remove bare-metal Nginx and Certbot packages (one-time cleanup)
   ansible.builtin.apt:
@@ -299,7 +299,7 @@
       - python3-certbot-nginx
     state: absent
     purge: true
-  when: enable_tls_proxy
+  when: tls_proxy_enabled
 
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
@@ -319,7 +319,7 @@
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
     networks:
       - name: minitwit_network
-  when: enable_tls_proxy
+  when: tls_proxy_enabled
 
 - name: Pull and Run ACME Companion Container
   community.docker.docker_container:
@@ -340,7 +340,7 @@
       - "acme:/etc/acme.sh"
     networks:
       - name: minitwit_network
-  when: enable_tls_proxy
+  when: tls_proxy_enabled
 - name: Cleanup dangling images
   community.docker.docker_prune:
     images: true

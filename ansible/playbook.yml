@@ -17,7 +17,7 @@
     postgres_connection_string: "{{ postgres_connection_string | default('', true) }}"
     grafana_admin_user: "{{ grafana_admin_user | default('admin', true) }}"
     grafana_admin_password: "{{ grafana_admin_password | default('admin', true) }}"
-    enable_tls_proxy: "{{ enable_tls_proxy | default(deployment_mode != 'vagrant', true) }}"
+    tls_proxy_enabled: "{{ enable_tls_proxy | default(deployment_mode != 'vagrant', true) }}"
 
   roles:
     - minitwit

@@ -13,6 +13,10 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.memory = 4096
     vb.cpus = 2
+    # Force a plain BIOS boot for this box. On some recent VirtualBox setups,
+    # relying on the provider default can leave the imported guest stuck before
+    # SSH becomes reachable.
+    vb.customize ["modifyvm", :id, "--firmware", "bios"]
   end
 
   # Install Ansible on the VM so it can provision itself
