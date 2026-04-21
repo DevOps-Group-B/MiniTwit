@@ -52,6 +52,21 @@
     update_cache: true
   become: true
 
+- name: Install logrotate
+  ansible.builtin.apt:
+    name: logrotate
+    state: present
+  become: true
+
+- name: Deploy logrotate policy for Docker container logs
+  ansible.builtin.copy:
+    src: logrotate/minitwit-docker-containers
+    dest: /etc/logrotate.d/minitwit-docker-containers
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
 - name: Create Docker network for monitoring
   community.docker.docker_network:
     name: minitwit_network
