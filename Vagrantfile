@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
   #Grafana port 
   config.vm.network "forwarded_port", guest: 3000, host: 3000
   #Prometheus port
-  config.vm.network "forwarded_port", guest: 9090, host: 
+  config.vm.network "forwarded_port", guest: 9090, host: 9090 
   #Loki port
   config.vm.network "forwarded_port", guest: 3100, host: 3100
   config.vm.network "forwarded_port", guest: 12345, host: 12345
