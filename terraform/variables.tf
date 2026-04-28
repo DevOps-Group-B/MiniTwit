@@ -1,21 +1,5 @@
 # ============================================================================
-# Terraform Variables - Infrastructure Configuration
-# ============================================================================
-
-# Deployment mode: "local" for VirtualBox, "production" for DigitalOcean
-variable "deployment_mode" {
-  type        = string
-  description = "Deployment environment: 'local' (VirtualBox) or 'production' (DigitalOcean)"
-  default     = "local"
-  
-  validation {
-    condition     = contains(["local", "production"], var.deployment_mode)
-    error_message = "Deployment mode must be either 'local' or 'production'."
-  }
-}
-
-# ============================================================================
-# Common Infrastructure Variables
+# Terraform Variables - Production Infrastructure Configuration
 # ============================================================================
 
 variable "project_name" {
@@ -27,13 +11,13 @@ variable "project_name" {
 variable "environment" {
   type        = string
   description = "Environment tag (dev, staging, prod)"
-  default     = "dev"
+  default     = "prod"
 }
 
 variable "domain_name" {
   type        = string
   description = "Domain name for the application"
-  default     = "localhost"
+  default     = "minitwit.tech"
 }
 
 variable "letsencrypt_email" {
@@ -87,74 +71,6 @@ variable "grafana_admin_password" {
 }
 
 # ============================================================================
-# Local Development (VirtualBox) Variables
-# ============================================================================
-
-variable "local_vm_name" {
-  type        = string
-  description = "Name of the local VirtualBox VM"
-  default     = "MiniTwit-Local"
-}
-
-variable "local_vm_cpus" {
-  type        = number
-  description = "Number of CPU cores for local VM"
-  default     = 2
-  
-  validation {
-    condition     = var.local_vm_cpus >= 1 && var.local_vm_cpus <= 8
-    error_message = "CPU count must be between 1 and 8."
-  }
-}
-
-variable "local_vm_memory" {
-  type        = number
-  description = "Memory in MB for local VM"
-  default     = 4096
-  
-  validation {
-    condition     = var.local_vm_memory >= 2048 && var.local_vm_memory <= 16384
-    error_message = "Memory must be between 2048 MB and 16384 MB."
-  }
-}
-
-variable "local_host_port_http" {
-  type        = number
-  description = "Host port for HTTP traffic (guest 80)"
-  default     = 8080
-}
-
-variable "local_host_port_https" {
-  type        = number
-  description = "Host port for HTTPS traffic (guest 443)"
-  default     = 8443
-}
-
-variable "local_host_port_grafana" {
-  type        = number
-  description = "Host port for Grafana (guest 3000)"
-  default     = 3000
-}
-
-variable "local_host_port_prometheus" {
-  type        = number
-  description = "Host port for Prometheus (guest 9090)"
-  default     = 9090
-}
-
-variable "local_host_port_loki" {
-  type        = number
-  description = "Host port for Loki (guest 3100)"
-  default     = 3100
-}
-
-variable "ubuntu_box_image" {
-  type        = string
-  description = "Ubuntu box image URL for local VirtualBox"
-  default     = "Ubuntu22.04"
-}
-
-# ============================================================================
 # Production (DigitalOcean) Variables
 # ============================================================================
 
@@ -177,12 +93,6 @@ variable "digitalocean_droplet_size" {
   default     = "s-1vcpu-2gb"
 }
 
-variable "digitalocean_ssh_key_id" {
-  type        = string
-  description = "DigitalOcean SSH key ID for droplet access"
-  default     = ""
-}
-
 variable "digitalocean_ssh_key_name" {
   type        = string
   description = "DigitalOcean SSH key name"
@@ -201,12 +111,6 @@ variable "ssh_private_key_path" {
   default     = "~/.ssh/id_rsa"
 }
 
-variable "ssh_public_key_path" {
-  type        = string
-  description = "Path to SSH public key for DigitalOcean"
-  default     = "~/.ssh/id_rsa.pub"
-}
-
 # ============================================================================
 # Ansible Provisioning Variables
 # ============================================================================
@@ -215,12 +119,6 @@ variable "ansible_playbook_path" {
   type        = string
   description = "Path to Ansible playbook for provisioning"
   default     = "../ansible/playbook.yml"
-}
-
-variable "ansible_inventory_path" {
-  type        = string
-  description = "Path to Ansible inventory file"
-  default     = "../ansible/inventory.ini"
 }
 
 variable "provision_with_ansible" {
@@ -245,6 +143,6 @@ variable "common_tags" {
   default = {
     Project     = "MiniTwit"
     ManagedBy   = "Terraform"
-    Environment = "development"
+    Environment = "prod"
   }
 }

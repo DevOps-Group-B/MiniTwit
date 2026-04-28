@@ -8,10 +8,6 @@ terraform {
   required_version = ">= 1.0"
   
   required_providers {
-    libvirt = {
-      source  = "dmacvicar/libvirt"
-      version = "~> 0.7"
-    }
     digitalocean = {
       source  = "digitalocean/digitalocean"
       version = "~> 2.0"
@@ -42,18 +38,6 @@ terraform {
 # ============================================================================
 provider "digitalocean" {
   token = var.digitalocean_token
-
-  # Only configure if deploying to production
-  skip_wait_for_available_droplet = false
-}
-
-# ============================================================================
-# Libvirt Provider Configuration (for local VirtualBox)
-# ============================================================================
-provider "libvirt" {
-  count   = var.deployment_mode == "local" ? 1 : 0
-  uri     = "qemu:///system"
-  # Alternative: "qemu+ssh://user@host/system"
 }
 
 # ============================================================================

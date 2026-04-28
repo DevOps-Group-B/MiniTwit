@@ -47,19 +47,16 @@ Running Infrastructure
 Terraform HCL Files
     ├── providers.tf (provider configuration)
     ├── variables.tf (input variables)
-    ├── main.tf (main resources)
-    ├── local.tf (local-specific)
-    └── outputs.tf (outputs)
+  ├── main.tf (main resources)
+  └── outputs.tf (outputs)
     ↓
 Terraform Commands (terraform plan/apply)
     ↓
 Remote API Calls
-    ↓
-Cloud Provider (VirtualBox/DigitalOcean)
-    ↓
-Cloud-Init Initialization
-    ↓
-Ansible Provisioning
+  ↓
+Cloud Provider (DigitalOcean)
+  ↓
+Remote-Exec + Ansible provisioning
     ↓
 Running Infrastructure (with state tracking)
 ```
@@ -104,7 +101,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 # Edit configuration
 nano terraform.tfvars
-# Set: deployment_mode = "local" (or "production")
+# Set: deployment_mode = "production"
 ```
 
 ### 4. Plan and Review Changes
@@ -153,7 +150,7 @@ rm ../Vagrantfile  # Or keep as reference
 
 # Git cleanup
 git rm -f ../Vagrantfile
-git add ../
+git add ../terraform
 git commit -m "chore: migrate from Vagrant to Terraform"
 ```
 
@@ -165,7 +162,7 @@ git commit -m "chore: migrate from Vagrant to Terraform"
 |---------|-----------|---------|
 | `Vagrantfile` | `terraform/*.tf` | Infrastructure definition |
 | `Vagrant.configure()` | `providers.tf` | Provider setup |
-| `config.vm.box` | `libvirt_volume` + `libvirt_domain` | VM specification |
+| `config.vm.box` | `digitalocean_droplet` | VM specification |
 | `machine_config.vm.provision` | `provisioner "remote-exec"` + `null_resource` | Provisioning |
 | Environment variables | `variables.tf` + `terraform.tfvars` | Configuration |
 | Output messages | `outputs.tf` | Information display |
@@ -192,14 +189,12 @@ end
 ### Terraform (HCL)
 
 ```hcl
-# terraform/local.tf
-resource "libvirt_domain" "minitwit_local" {
-  count   = var.deployment_mode == "local" ? 1 : 0
-  name    = var.local_vm_name
-  memory  = var.local_vm_memory
-  vcpu    = var.local_vm_cpus
-  running = true
-  # ... additional configuration
+# terraform/main.tf
+resource "digitalocean_droplet" "minitwit" {
+  name   = "minitwit-prod-droplet"
+  region = var.digitalocean_region
+  size   = var.digitalocean_droplet_size
+  image  = "ubuntu-22-04-x64"
 }
 ```
 
@@ -230,9 +225,9 @@ end
 
 **Terraform:**
 ```hcl
-# Uses libvirt/KVM (Linux) instead
-resource "libvirt_domain" "minitwit_local" {
-  memory = var.local_vm_memory
+# Uses a DigitalOcean droplet instead of a local VM
+resource "digitalocean_droplet" "minitwit" {
+  size = var.digitalocean_droplet_size
 }
 ```
 
@@ -278,6 +273,8 @@ terraform.tfstate.backup   # Previous state (auto-created)
 .terraform/                # Provider plugins and modules
 ```
 
+Terraform state should be kept out of git and, for production, stored in a remote backend if you add one later.
+
 ## Migrating to Remote State (Recommended for Production)
 
 ### S3 Backend
@@ -319,16 +316,6 @@ cd terraform
 terraform init -upgrade
 ```
 
-### Issue: "Resource address not found"
-
-```bash
-# Solution: Check resource names match exactly
-terraform state list
-
-# If importing existing resources:
-terraform import digitalocean_droplet.minitwit <DROPLET_ID>
-```
-
 ### Issue: "State file corrupted"
 
 ```bash
@@ -346,7 +333,7 @@ terraform state list
 
 ```hcl
 # terraform/terraform.tfvars
-local_host_port_http = 8081  # Change if 8080 is in use
+domain_name = "minitwit.tech"  # Update if the domain changes
 ```
 
 ## Rollback Plan
@@ -380,7 +367,7 @@ If you need to immediately fall back:
 # Terraform will have created infrastructure
 # But Vagrant metadata is gone, so:
 
-vagrant up  # This will fail or create new VM
+vagrant up  # This is legacy only and should not be used for production anymore
 
 # Instead, manually access the created infrastructure
 # Or import into Vagrant manually (not recommended)
@@ -404,7 +391,7 @@ vagrant up  # This will fail or create new VM
    - Use Terraform Cloud's encrypted variables
 
 4. **Code Organization**
-   - Separate concerns (local.tf, main.tf, etc.)
+  - Keep production-only configuration in main.tf, providers.tf, variables.tf, and outputs.tf
    - Use variables for configuration
    - Document complex resources
 
@@ -440,10 +427,6 @@ terraform apply -var-file=terraform.tfvars
 
 # Destroy
 terraform destroy -var-file=terraform.tfvars
-
-# State
-terraform state list
-terraform state show <resource>
 
 # Debug
 TF_LOG=DEBUG terraform plan
