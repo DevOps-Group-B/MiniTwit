@@ -180,6 +180,8 @@
   when: lookup('env', 'DOCKERHUB_TOKEN') != ""
 
 # --- Deploy Prometheus ---
+# Port is bound to localhost only: Grafana reaches Prometheus via Docker-internal DNS
+# (http://prometheus:9090) on minitwit_network, not via the host port binding.
 - name: Pull and Run Prometheus Container
   community.docker.docker_container:
     name: "itu-minitwit-prometheus"
@@ -219,6 +221,8 @@
           - node-exporter
 
 # --- Deploy Loki ---
+# Port is bound to localhost only: Grafana reaches Loki via Docker-internal DNS
+# (http://loki:3100) on minitwit_network, not via the host port binding.
 - name: Create Loki volume
   community.docker.docker_volume:
     name: loki-storage
@@ -244,6 +248,7 @@
           - loki
 
 # --- Deploy Alloy ---
+# Port is bound to localhost only: only used for local debugging of the Alloy agent.
 - name: Pull and Run Alloy Container
   community.docker.docker_container:
     name: "itu-minitwit-alloy"
