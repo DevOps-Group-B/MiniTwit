@@ -1,5 +1,5 @@
 ---
-# PLAY 1: DATABASE SETUP
+# PLAY 1: CONFIGURE DATABASE SERVER
 - name: Configure Production Database
   hosts: db_servers
   become: true
@@ -10,14 +10,14 @@
         state: present
         update_cache: true
 
-    - name: Configure PostgreSQL listen addresses
+    - name: Configure PostgreSQL to listen on all interfaces
       ansible.builtin.lineinfile:
         path: /etc/postgresql/16/main/postgresql.conf
         regexp: "^#?listen_addresses ="
         line: "listen_addresses = '*'"
       notify: Restart postgres
 
-    - name: Allow Web Server connections (HBA)
+    - name: Allow Web Server to connect (HBA Configuration)
       ansible.builtin.lineinfile:
         path: /etc/postgresql/16/main/pg_hba.conf
         line: "host all all 0.0.0.0/0 md5"
@@ -28,31 +28,19 @@
         name: minitwit
       become_user: postgres
 
-    - name: Create Database User
+    - name: Create Database User (Matches Schema)
       community.postgresql.postgresql_user:
         db: minitwit
         name: minitwit_user
-        password: "password123"
+        password: "password123" 
         priv: "ALL"
       become_user: postgres
 
-    - name: Ensure SQL temp directory exists
-      ansible.builtin.file:
-        path: /tmp/sql
-        state: directory
-        mode: '0755'
-
-    - name: Upload Schema
-      ansible.builtin.copy:
-        # Path fixed based on your image_5b2c79.png
-        src: roles/minitwit/files/database/schema.sql
-        dest: /tmp/sql/schema.sql
-        mode: '0644'
-
-    - name: Apply Schema
+    - name: Upload and Apply Schema
       community.postgresql.postgresql_query:
         db: minitwit
-        path: "/tmp/sql/schema.sql"
+        # Fixed path based on your folder structure image
+        path: "{{ playbook_dir }}/roles/minitwit/files/database/schema.sql"
       become_user: postgres
 
   handlers:
@@ -61,24 +49,25 @@
         name: postgresql
         state: restarted
 
-# PLAY 2: WEB APP & MONITORING
-- name: Configure Web and Monitoring
+# PLAY 2: CONFIGURE WEB SERVER & MONITORING
+- name: Provision and deploy MiniTwit
   hosts: web_servers
+  become: true
   vars:
-    # Build string using the dynamic IP from inventory
-    dynamic_postgres_string: "Host={{ db_internal_ip }};Database=minitwit;Username=minitwit_user;Password=password123"
     deployment_mode: "production"
     image_name: "minitwitimage"
     container_name: "minitwit"
     app_port: "5273"
-    dockerhub_user: "sn3ke"
-    app_version: "{{ image_tag | default('latest') }}"
-    postgres_connection_string: "{{ dynamic_postgres_string }}"
     domain_name: "minitwit.tech"
     letsencrypt_email: "bror@live.dk"
+    dockerhub_user: "sn3ke"
+    app_version: "{{ image_tag | default('latest') }}"
+    # Build connection string dynamically
+    db_conn_production: "Host={{ db_internal_ip }};Database=minitwit;Username=minitwit_user;Password=password123"
+    postgres_connection_string: "{{ db_conn_production }}"
     grafana_admin_user: "admin"
     grafana_admin_password: "password123"
     tls_proxy_enabled: true
-
+  
   roles:
     - minitwit

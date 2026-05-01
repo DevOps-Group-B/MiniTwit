@@ -1,29 +1,37 @@
 # ============================================================================
 # Terraform Outputs
 # ============================================================================
-# Provides important information about deployed infrastructure
+# Provides important information about the distributed multi-node infrastructure
 
 output "deployment_summary" {
-  description = "Comprehensive deployment information"
+  description = "Comprehensive deployment information for Web and DB nodes"
   value = {
     deployment_mode = "production"
     project_name    = var.project_name
     environment     = var.environment
     timestamp       = timestamp()
 
-    # Production-specific outputs
-    production = {
+    # Web Server Details
+    web_server = {
       droplet_id   = digitalocean_droplet.minitwit.id
       droplet_ip   = digitalocean_droplet.minitwit.ipv4_address
-      region       = var.digitalocean_region
-      droplet_size = var.digitalocean_droplet_size
-      firewall_id  = try(digitalocean_firewall.minitwit[0].id, "")
+      firewall_id  = digitalocean_firewall.web.id
     }
+
+    # Database Server Details
+    database_server = {
+      droplet_id   = digitalocean_droplet.database.id
+      droplet_ip   = digitalocean_droplet.database.ipv4_address
+      firewall_id  = digitalocean_firewall.database.id
+    }
+
+    region       = var.digitalocean_region
+    common_size  = var.digitalocean_droplet_size
   }
 }
 
 output "access_urls" {
-  description = "Application and monitoring access URLs"
+  description = "Application and monitoring access URLs (hosted on Web node)"
   value = {
     web_app    = "https://${var.domain_name}"
     grafana    = "http://${digitalocean_droplet.minitwit.ipv4_address}:3000"
@@ -32,9 +40,12 @@ output "access_urls" {
   }
 }
 
-output "ssh_connection" {
-  description = "SSH connection information"
-  value = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit.ipv4_address}"
+output "ssh_connection_commands" {
+  description = "SSH connection strings for both droplets"
+  value = {
+    web_node = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit.ipv4_address}"
+    db_node  = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.database.ipv4_address}"
+  }
 }
 
 output "grafana_credentials" {
@@ -47,26 +58,20 @@ output "grafana_credentials" {
 }
 
 output "next_steps" {
-  description = "Next steps after infrastructure deployment"
+  description = "Post-deployment verification steps"
   value = [
-    "1. Wait for Ansible provisioning to complete (watch with: tail -f terraform.log)",
-    "2. SSH into droplet: ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit.ipv4_address}",
-    "3. Check docker status: docker ps",
-    "4. Access via domain: https://${var.domain_name}",
-    "5. View monitoring at: http://${digitalocean_droplet.minitwit.ipv4_address}:3000"
+    "1. Wait for Ansible to finish (Monitor with: tail -f terraform.log or watch the terminal)",
+    "2. Verify DB: ssh into DB node and run 'sudo -u postgres psql -c \"\\dt\" minitwit'",
+    "3. Verify Web: ssh into Web node and run 'docker ps'",
+    "4. Check Site: https://${var.domain_name}",
+    "5. Check Metrics: http://${digitalocean_droplet.minitwit.ipv4_address}:3000"
   ]
 }
 
 output "terraform_state_info" {
-  description = "Information about Terraform state management"
+  description = "State management reminder"
   value = {
-    state_file = "terraform.tfstate (local) - consider migrating to remote backend"
-    recommended_backend = [
-      "S3 for AWS",
-      "Azure Blob Storage for Azure",
-      "Terraform Cloud for managed state",
-      "Local backend for development"
-    ]
-    docs = "See README.md for state management setup"
+    state_file = "terraform.tfstate (local)"
+    notice     = "Ensure this file is backed up or migrate to a remote backend (S3/DO Spaces) for team collaboration."
   }
 }

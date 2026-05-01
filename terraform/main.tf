@@ -1,35 +1,32 @@
-# ============================================================================
-# MiniTwit Infrastructure as Code - Main Configuration
-# ============================================================================
-
-# Fetch DigitalOcean SSH key
+# This looks up your existing SSH key by the name defined in variables.tf
 data "digitalocean_ssh_key" "default" {
   name = var.digitalocean_ssh_key_name
 }
 
-# 1. WEB SERVER DROPLET
+# ==========================================================
+# 1. DROPLETS
+# ==========================================================
 resource "digitalocean_droplet" "minitwit" {
-  name       = "${var.project_name}-${var.environment}-web"
+  name       = "${var.project_name}-web-prod"
   region     = var.digitalocean_region
   size       = var.digitalocean_droplet_size
-  image      = "ubuntu-24-04-x64" # Updated to match your OS screenshot
+  image      = "ubuntu-24-04-x64"
   ssh_keys   = [data.digitalocean_ssh_key.default.id]
-  tags       = [var.project_name, var.environment, "web"]
 }
 
-# 2. DATABASE DROPLET
 resource "digitalocean_droplet" "database" {
-  name       = "${var.project_name}-${var.environment}-db"
+  name       = "${var.project_name}-db-prod"
   region     = var.digitalocean_region
   size       = "s-1vcpu-1gb"
   image      = "ubuntu-24-04-x64"
   ssh_keys   = [data.digitalocean_ssh_key.default.id]
-  tags       = [var.project_name, var.environment, "database"]
 }
 
-# 3. FIREWALLS
+# ==========================================================
+# 2. FIREWALLS
+# ==========================================================
 resource "digitalocean_firewall" "web" {
-  name        = "${var.project_name}-web-firewall"
+  name        = "minitwit-web-firewall"
   droplet_ids = [digitalocean_droplet.minitwit.id]
 
   inbound_rule {
@@ -58,7 +55,7 @@ resource "digitalocean_firewall" "web" {
 }
 
 resource "digitalocean_firewall" "database" {
-  name        = "${var.project_name}-db-firewall"
+  name        = "minitwit-db-firewall"
   droplet_ids = [digitalocean_droplet.database.id]
 
   inbound_rule {
@@ -70,7 +67,7 @@ resource "digitalocean_firewall" "database" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "5432"
-    source_droplet_ids = [digitalocean_droplet.minitwit.id] # ONLY Web can talk to DB
+    source_droplet_ids = [digitalocean_droplet.minitwit.id] # Only Web can talk to DB
   }
 
   outbound_rule {
@@ -80,7 +77,9 @@ resource "digitalocean_firewall" "database" {
   }
 }
 
-# 4. ANSIBLE INVENTORY GENERATION
+# ==========================================================
+# 3. ANSIBLE INVENTORY & PROVISIONING
+# ==========================================================
 resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventory.ini"
   content  = templatefile("${path.module}/templates/inventory-production.tpl", {
@@ -91,7 +90,6 @@ resource "local_file" "ansible_inventory" {
   })
 }
 
-# 5. WAIT AND PROVISION
 resource "time_sleep" "wait_for_droplets" {
   create_duration = "30s"
   depends_on      = [digitalocean_droplet.minitwit, digitalocean_droplet.database]

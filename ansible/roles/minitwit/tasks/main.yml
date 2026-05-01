@@ -1,84 +1,112 @@
----
-# PLAY 1: DATABASE SETUP
-- name: Configure Production Database
-  hosts: db_servers
+- name: Resolve container environment
+  ansible.builtin.set_fact:
+    minitwit_container_env: >-
+      {{
+        {
+          'POSTGRES_CONNECTION_STRING': postgres_connection_string,
+          'VIRTUAL_PORT': app_port
+        }
+        | combine(
+            {} if not tls_proxy_enabled else {
+              'VIRTUAL_HOST': domain_name,
+              'LETSENCRYPT_HOST': domain_name,
+              'LETSENCRYPT_EMAIL': letsencrypt_email
+            }
+          )
+      }}
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: [docker-ce, docker-ce-cli, containerd.io]
+    state: present
+    update_cache: true
   become: true
-  tasks:
-    - name: Install PostgreSQL 16
-      ansible.builtin.apt:
-        name: [postgresql, postgresql-contrib, python3-psycopg2]
-        state: present
-        update_cache: true
 
-    - name: Configure PostgreSQL listen addresses
-      ansible.builtin.lineinfile:
-        path: /etc/postgresql/16/main/postgresql.conf
-        regexp: "^#?listen_addresses ="
-        line: "listen_addresses = '*'"
-      notify: Restart postgres
+- name: Create Docker network
+  community.docker.docker_network:
+    name: minitwit_network
+    state: present
 
-    - name: Allow Web Server connections (HBA)
-      ansible.builtin.lineinfile:
-        path: /etc/postgresql/16/main/pg_hba.conf
-        line: "host all all 0.0.0.0/0 md5"
-      notify: Restart postgres
+- name: Create monitoring config directories
+  ansible.builtin.file:
+    path: "/opt/minitwit/monitoring/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: [loki, alloy]
+  become: true
 
-    - name: Create MiniTwit Database
-      community.postgresql.postgresql_db:
-        name: minitwit
-      become_user: postgres
+- name: Log in to Docker Hub
+  community.docker.docker_login:
+    username: "{{ dockerhub_user }}"
+    password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+  when: lookup('env', 'DOCKERHUB_TOKEN') != ""
 
-    - name: Create Database User
-      community.postgresql.postgresql_user:
-        db: minitwit
-        name: minitwit_user
-        password: "password123"
-        priv: "ALL"
-      become_user: postgres
+- name: Run MiniTwit App Container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
+    state: started
+    restart_policy: always
+    recreate: true
+    env: "{{ minitwit_container_env }}"
+    networks: [{name: minitwit_network}]
 
-    - name: Ensure SQL temp directory exists
-      ansible.builtin.file:
-        path: /tmp/sql
-        state: directory
-        mode: '0755'
+- name: Run Prometheus
+  community.docker.docker_container:
+    name: "itu-minitwit-prometheus"
+    image: "{{ dockerhub_user }}/prometheus_image:latest"
+    state: started
+    restart_policy: always
+    networks: [{name: minitwit_network, aliases: [prometheus]}]
+    ports: ["9090:9090"]
 
-    - name: Upload Schema
-      ansible.builtin.copy:
-        # Path fixed based on your image_5b2c79.png
-        src: roles/minitwit/files/database/schema.sql
-        dest: /tmp/sql/schema.sql
-        mode: '0644'
+- name: Run Grafana
+  community.docker.docker_container:
+    name: "itu-minitwit-grafana"
+    image: "{{ dockerhub_user }}/grafana_image:latest"
+    state: started
+    restart_policy: always
+    networks: [{name: minitwit_network}]
+    ports: ["3000:3000"]
+    env:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
 
-    - name: Apply Schema
-      community.postgresql.postgresql_query:
-        db: minitwit
-        path: "/tmp/sql/schema.sql"
-      become_user: postgres
+- name: Run Nginx Proxy
+  community.docker.docker_container:
+    name: "itu-minitwit-nginx-proxy"
+    image: "nginxproxy/nginx-proxy:1.6"
+    state: started
+    restart_policy: always
+    ports: ["80:80", "443:443"]
+    volumes:
+      - "nginx-certs:/etc/nginx/certs:ro"
+      - "nginx-vhost:/etc/nginx/vhost.d"
+      - "nginx-html:/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+    networks: [{name: minitwit_network}]
+  when: tls_proxy_enabled
 
-  handlers:
-    - name: Restart postgres
-      ansible.builtin.systemd:
-        name: postgresql
-        state: restarted
+- name: Run ACME Companion
+  community.docker.docker_container:
+    name: "itu-minitwit-acme-companion"
+    image: "nginxproxy/acme-companion:2.5"
+    state: started
+    restart_policy: always
+    env:
+      NGINX_PROXY_CONTAINER: "itu-minitwit-nginx-proxy"
+      DEFAULT_EMAIL: "{{ letsencrypt_email }}"
+    volumes:
+      - "nginx-certs:/etc/nginx/certs"
+      - "nginx-vhost:/etc/nginx/vhost.d"
+      - "nginx-html:/usr/share/nginx/html"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "acme:/etc/acme.sh"
+    networks: [{name: minitwit_network}]
+  when: tls_proxy_enabled
 
-# PLAY 2: WEB APP & MONITORING
-- name: Configure Web and Monitoring
-  hosts: web_servers
-  vars:
-    # Build string using the dynamic IP from inventory
-    dynamic_postgres_string: "Host={{ db_internal_ip }};Database=minitwit;Username=minitwit_user;Password=password123"
-    deployment_mode: "production"
-    image_name: "minitwitimage"
-    container_name: "minitwit"
-    app_port: "5273"
-    dockerhub_user: "sn3ke"
-    app_version: "{{ image_tag | default('latest') }}"
-    postgres_connection_string: "{{ dynamic_postgres_string }}"
-    domain_name: "minitwit.tech"
-    letsencrypt_email: "bror@live.dk"
-    grafana_admin_user: "admin"
-    grafana_admin_password: "password123"
-    tls_proxy_enabled: true
-
-  roles:
-    - minitwit
+- name: Cleanup dangling images
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      dangling: true
