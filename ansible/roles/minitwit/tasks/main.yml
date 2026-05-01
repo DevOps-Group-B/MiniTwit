@@ -31,13 +31,6 @@
     mode: '0755'
   become: true
 
-- name: Install gnupg for Docker repository key handling
-  ansible.builtin.apt:
-    name: gnupg
-    state: present
-    update_cache: true
-  become: true
-
 - name: Download Docker GPG key
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
@@ -46,23 +39,9 @@
     force: true
   become: true
 
-- name: Dearmor Docker GPG key
-  ansible.builtin.command:
-    cmd: gpg --dearmor --yes --output /etc/apt/keyrings/docker.gpg /etc/apt/keyrings/docker.asc
-  args:
-    creates: /etc/apt/keyrings/docker.gpg
-  become: true
-
-- name: Set Docker keyring permissions
-  ansible.builtin.file:
-    path: /etc/apt/keyrings/docker.gpg
-    state: file
-    mode: '0644'
-  become: true
-
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
     state: present
   become: true
 
