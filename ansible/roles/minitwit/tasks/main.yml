@@ -58,6 +58,19 @@
     state: present
   become: true
 
+- name: Install keepalived
+  ansible.builtin.apt:
+    name: keepalived
+    state: present
+  become: true
+
+- name: Enable and start keepalived service
+  ansible.builtin.systemd:
+    name: keepalived
+    enabled: true
+    state: started
+  become: true
+
 - name: Deploy logrotate policy for Docker container logs
   ansible.builtin.copy:
     src: logrotate/minitwit-docker-containers
