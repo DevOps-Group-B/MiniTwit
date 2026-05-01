@@ -6,12 +6,6 @@
 
 - name: Clean apt state and remove conflicting Docker configs
   block:
-    - name: Clear apt cache and lists
-      ansible.builtin.apt:
-        update_cache: yes
-        autoclean: yes
-      become: true
-
     - name: Remove specific conflicting or legacy Docker files
       ansible.builtin.file:
         path: "{{ item }}"
