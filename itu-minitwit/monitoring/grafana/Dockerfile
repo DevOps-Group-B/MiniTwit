@@ -1,4 +1,4 @@
-FROM grafana/grafana:13.2.0
+FROM grafana/grafana:13.0.1
 
 ENV PROMETHEUS_HOST='host.docker.internal:9090'
 
