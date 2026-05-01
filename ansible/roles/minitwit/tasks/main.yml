@@ -133,7 +133,7 @@
     mode: '0644'
   notify: restart keepalived
   become: true
-  when: inventory_hostname in groups['minitwit_lb_primary']
+  when: inventory_hostname in groups.get('minitwit_lb_primary', [])
 
 - name: Deploy keepalived configuration (secondary server)
   ansible.builtin.template:
@@ -144,7 +144,7 @@
     mode: '0644'
   notify: restart keepalived
   become: true
-  when: inventory_hostname in groups['minitwit_lb_secondary']
+  when: inventory_hostname in groups.get('minitwit_lb_secondary', [])
 
 - name: Enable and start Nginx service
   ansible.builtin.systemd:
