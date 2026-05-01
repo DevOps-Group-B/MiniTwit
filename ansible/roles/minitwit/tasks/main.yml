@@ -28,7 +28,7 @@
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0750'
+    mode: '0755'
   become: true
 
 - name: Download Docker GPG key
@@ -87,7 +87,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0750'
+    mode: '0755'
   loop:
     - /opt/minitwit
     - /opt/minitwit/monitoring
