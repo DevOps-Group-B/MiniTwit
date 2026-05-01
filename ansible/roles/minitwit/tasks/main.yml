@@ -28,14 +28,14 @@
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0755'
+    mode: '0750'
   become: true
 
 - name: Download Docker GPG key
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+    mode: '0640'
     force: true
   become: true
 
@@ -81,7 +81,7 @@
   ansible.builtin.file:
     path: /etc/nginx/sites-enabled
     state: directory
-    mode: '0755'
+    mode: '0750'
   become: true
 
 # --- High Availability Setup ---
@@ -91,7 +91,7 @@
     dest: /usr/local/bin/check_nginx.sh
     owner: root
     group: root
-    mode: '0755'
+    mode: '0750'
   become: true
 
 - name: Deploy keepalived notify scripts
@@ -100,7 +100,7 @@
     dest: "/usr/local/bin/{{ item }}"
     owner: root
     group: root
-    mode: '0755'
+    mode: '0750'
   loop:
     - notify_primary.sh
     - notify_backup.sh
@@ -113,7 +113,7 @@
     dest: /etc/nginx/sites-enabled/minitwit
     owner: root
     group: root
-    mode: '0644'
+    mode: '0640'
   notify: restart nginx
   become: true
 
@@ -130,7 +130,7 @@
     dest: /etc/keepalived/keepalived.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: '0600'
   notify: restart keepalived
   become: true
   when: inventory_hostname in groups['minitwit_lb_primary']
@@ -141,7 +141,7 @@
     dest: /etc/keepalived/keepalived.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: '0600'
   notify: restart keepalived
   become: true
   when: inventory_hostname in groups['minitwit_lb_secondary']
@@ -159,7 +159,7 @@
     dest: /etc/logrotate.d/minitwit-docker-containers
     owner: root
     group: root
-    mode: '0644'
+    mode: '0640'
   become: true
 
 - name: Create Docker network for monitoring
@@ -182,7 +182,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: '0750'
   loop:
     - /opt/minitwit
     - /opt/minitwit/monitoring
@@ -196,14 +196,14 @@
     dest: /opt/minitwit/monitoring/loki/config.yml
     owner: "{{ loki_config_uid }}"
     group: "{{ loki_config_gid }}"
-    mode: '0640'
+    mode: '0600'
   become: true
 
 - name: Copy Alloy production config
   ansible.builtin.copy:
     src: monitoring/alloy/config.alloy
     dest: /opt/minitwit/monitoring/alloy/config.alloy
-    mode: '0640'
+    mode: '0600'
   become: true
 
 - name: Validate Alloy Docker log bind mount path
