@@ -60,7 +60,7 @@ variable "postgres_connection_string" {
 variable "grafana_admin_user" {
   type        = string
   description = "Grafana administrator username"
-  default     = "admin"
+  default     = "helgeandfriends"
 }
 
 variable "grafana_admin_password" {
@@ -84,7 +84,7 @@ variable "digitalocean_token" {
 variable "digitalocean_region" {
   type        = string
   description = "DigitalOcean region for droplet deployment"
-  default     = "sfo3"
+  default     = "FRA1"
 }
 
 variable "digitalocean_droplet_size" {
@@ -96,7 +96,7 @@ variable "digitalocean_droplet_size" {
 variable "digitalocean_ssh_key_name" {
   type        = string
   description = "DigitalOcean SSH key name"
-  default     = "MiniTwit"
+  default     = "insert your own key"
 }
 
 variable "digitalocean_firewall_enable" {
