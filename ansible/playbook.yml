@@ -1,6 +1,6 @@
 ---
 - name: Provision and deploy MiniTwit
-  hosts: all
+  hosts: minitwit_servers
   become: true
 
   vars:

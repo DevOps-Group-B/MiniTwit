@@ -1,0 +1,33 @@
+global_defs {
+    script_user root
+    enable_script_security
+}
+
+vrrp_script check_nginx {
+    script "/usr/local/bin/check_nginx.sh"
+    interval 2
+    weight -20
+    fall 3
+    rise 2
+}
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface eth0
+    virtual_router_id 51
+    priority 150
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass minitwit_vrrp_pass_2026
+    }
+    virtual_ipaddress {
+        138.68.126.154/24
+    }
+    track_script {
+        check_nginx
+    }
+    notify_master "/usr/local/bin/notify_primary.sh"
+    notify_backup "/usr/local/bin/notify_backup.sh"
+    notify_fault "/usr/local/bin/notify_fault.sh"
+}
