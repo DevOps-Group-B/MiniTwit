@@ -28,7 +28,7 @@
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0755'
+    mode: '0750'
   become: true
 
 - name: Download Docker GPG key
