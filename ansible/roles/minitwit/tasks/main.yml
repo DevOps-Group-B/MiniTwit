@@ -35,7 +35,7 @@
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+    mode: '0640'
     force: true
   become: true
 
