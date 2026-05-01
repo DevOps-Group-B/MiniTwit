@@ -1,58 +1,55 @@
-- name: Wait for any background apt processes to finish
+- name: Force clear apt locks and corrupted cache
   ansible.builtin.shell: |
-    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 5; done;
-  become: true
-  changed_when: false
-
-- name: Clean apt state and remove conflicting Docker configs
-  block:
-    - name: Remove specific conflicting or legacy Docker files
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - /etc/apt/sources.list.d/docker.list
-        - /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
-        - /usr/share/keyrings/docker-archive-keyring.gpg
-        - /etc/apt/keyrings/docker.gpg
-      become: true
-
-- name: Ensure apt keyrings directory exists
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0750'
-  become: true
-
-- name: Download Docker GPG key via keyserver
-  ansible.builtin.shell: |
-    gpg --batch --no-default-keyring \
-        --keyring /tmp/docker-keyring.gpg \
-        --keyserver hkps://keyserver.ubuntu.com \
-        --recv-keys 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-    gpg --batch --no-default-keyring \
-        --keyring /tmp/docker-keyring.gpg \
-        --export > /etc/apt/keyrings/docker.gpg
-    chmod 0644 /etc/apt/keyrings/docker.gpg
-    rm -f /tmp/docker-keyring.gpg /tmp/docker-keyring.gpg~
+    rm -f /var/lib/apt/lists/lock
+    rm -f /var/cache/apt/archives/lock
+    rm -f /var/lib/dpkg/lock*
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    rm -f /etc/apt/sources.list.d/docker*.list
+    rm -f /etc/apt/sources.list.d/*docker*
+    rm -f /etc/apt/trusted.gpg.d/docker*
+    rm -f /etc/apt/keyrings/docker.gpg
   become: true
   changed_when: true
 
+- name: Remove legacy Docker repository entry
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    state: absent
+  become: true
+
+- name: Remove legacy Docker GPG key file
+  ansible.builtin.file:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+    state: absent
+  become: true
+
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: true
+  become: true
+
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
     state: present
-    filename: docker
-    update_cache: yes
   become: true
 
 - name: Install Docker CE
   ansible.builtin.apt:
-    name: 
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
+    name: [docker-ce, docker-ce-cli, containerd.io]
     state: present
+    update_cache: true
   become: true
 
 - name: Install logrotate
@@ -61,108 +58,13 @@
     state: present
   become: true
 
-- name: Install keepalived
-  ansible.builtin.apt:
-    name: keepalived
-    state: present
-  become: true
-
-- name: Enable and start keepalived service
-  ansible.builtin.systemd:
-    name: keepalived
-    enabled: true
-    state: started
-  become: true
-
-- name: Install Nginx
-  ansible.builtin.apt:
-    name: nginx
-    state: present
-  become: true
-
-- name: Create /etc/nginx/sites-enabled directory
-  ansible.builtin.file:
-    path: /etc/nginx/sites-enabled
-    state: directory
-    mode: '0750'
-  become: true
-
-# --- High Availability Setup ---
-- name: Deploy Nginx health check script
-  ansible.builtin.copy:
-    src: check_nginx.sh
-    dest: /usr/local/bin/check_nginx.sh
-    owner: root
-    group: root
-    mode: '0750'
-  become: true
-
-- name: Deploy keepalived notify scripts
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: "/usr/local/bin/{{ item }}"
-    owner: root
-    group: root
-    mode: '0750'
-  loop:
-    - notify_primary.sh
-    - notify_backup.sh
-    - notify_fault.sh
-  become: true
-
-- name: Deploy Nginx configuration (primary server)
-  ansible.builtin.template:
-    src: nginx-minitwit.conf.j2
-    dest: /etc/nginx/sites-enabled/minitwit
-    owner: root
-    group: root
-    mode: '0640'
-  notify: restart nginx
-  become: true
-
-- name: Disable default Nginx site
-  ansible.builtin.file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-  notify: restart nginx
-  become: true
-
-- name: Deploy keepalived configuration (primary server)
-  ansible.builtin.template:
-    src: keepalived-primary.conf.j2
-    dest: /etc/keepalived/keepalived.conf
-    owner: root
-    group: root
-    mode: '0600'
-  notify: restart keepalived
-  become: true
-  when: inventory_hostname in groups['minitwit_lb_primary']
-
-- name: Deploy keepalived configuration (secondary server)
-  ansible.builtin.template:
-    src: keepalived-secondary.conf.j2
-    dest: /etc/keepalived/keepalived.conf
-    owner: root
-    group: root
-    mode: '0600'
-  notify: restart keepalived
-  become: true
-  when: inventory_hostname in groups['minitwit_lb_secondary']
-
-- name: Enable and start Nginx service
-  ansible.builtin.systemd:
-    name: nginx
-    enabled: true
-    state: started
-  become: true
-
 - name: Deploy logrotate policy for Docker container logs
   ansible.builtin.copy:
     src: logrotate/minitwit-docker-containers
     dest: /etc/logrotate.d/minitwit-docker-containers
     owner: root
     group: root
-    mode: '0640'
+    mode: '0644'
   become: true
 
 - name: Create Docker network for monitoring
@@ -185,7 +87,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0750'
+    mode: '0755'
   loop:
     - /opt/minitwit
     - /opt/minitwit/monitoring
@@ -199,14 +101,14 @@
     dest: /opt/minitwit/monitoring/loki/config.yml
     owner: "{{ loki_config_uid }}"
     group: "{{ loki_config_gid }}"
-    mode: '0600'
+    mode: '0640'
   become: true
 
 - name: Copy Alloy production config
   ansible.builtin.copy:
     src: monitoring/alloy/config.alloy
     dest: /opt/minitwit/monitoring/alloy/config.alloy
-    mode: '0600'
+    mode: '0640'
   become: true
 
 - name: Validate Alloy Docker log bind mount path
