@@ -173,7 +173,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/grafana_image:latest
 
-      # --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
+# --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         env:
@@ -184,8 +184,18 @@ jobs:
           playbook: ansible/playbook.yml
           directory: ./
           inventory: |
-            [minitwit_servers]
-            server ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
+            [web_servers]
+            web_server ansible_host=${{ secrets.SSH_HOST_WEB }} ansible_user=${{ secrets.SSH_USER }}
+
+            [db_servers]
+            db_server ansible_host=${{ secrets.SSH_HOST_DB }} ansible_user=${{ secrets.SSH_USER }}
+
+            [minitwit:children]
+            web_servers
+            db_servers
+
+            [minitwit:vars]
+            db_internal_ip=${{ secrets.SSH_HOST_DB }}
           key: ${{ secrets.SSH_KEY }}
           options: |
             --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} postgres_connection_string='${{ secrets.POSTGRES_CONNECTION_STRING }}' grafana_admin_user='${{ secrets.GRAFANA_ADMIN_USER }}' grafana_admin_password='${{ secrets.GRAFANA_ADMIN_PASSWORD }}' domain_name='minitwit.tech' letsencrypt_email='${{ secrets.LETSENCRYPT_EMAIL }}'"
