@@ -38,6 +38,19 @@
   become: true
   changed_when: true
 
+- name: Verify Docker GPG key is valid
+  ansible.builtin.shell: |
+    gpg --no-default-keyring \
+        --keyring /etc/apt/keyrings/docker.gpg \
+        --list-keys
+  become: true
+  register: gpg_check
+  changed_when: false
+
+- name: Show GPG key info
+  ansible.builtin.debug:
+    var: gpg_check.stdout
+
 - name: Add Docker repository
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
