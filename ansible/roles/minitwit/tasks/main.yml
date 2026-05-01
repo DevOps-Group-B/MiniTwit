@@ -71,6 +71,88 @@
     state: started
   become: true
 
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+  become: true
+
+- name: Create /etc/nginx/sites-enabled directory
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+    mode: '0755'
+  become: true
+
+# --- High Availability Setup ---
+- name: Deploy Nginx health check script
+  ansible.builtin.copy:
+    src: check_nginx.sh
+    dest: /usr/local/bin/check_nginx.sh
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: Deploy keepalived notify scripts
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - notify_primary.sh
+    - notify_backup.sh
+    - notify_fault.sh
+  become: true
+
+- name: Deploy Nginx configuration (primary server)
+  ansible.builtin.template:
+    src: nginx-minitwit.conf.j2
+    dest: /etc/nginx/sites-enabled/minitwit
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+  become: true
+
+- name: Disable default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+  become: true
+
+- name: Deploy keepalived configuration (primary server)
+  ansible.builtin.template:
+    src: keepalived-primary.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart keepalived
+  become: true
+  when: inventory_hostname in groups['minitwit_lb_primary']
+
+- name: Deploy keepalived configuration (secondary server)
+  ansible.builtin.template:
+    src: keepalived-secondary.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart keepalived
+  become: true
+  when: inventory_hostname in groups['minitwit_lb_secondary']
+
+- name: Enable and start Nginx service
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+  become: true
+
 - name: Deploy logrotate policy for Docker container logs
   ansible.builtin.copy:
     src: logrotate/minitwit-docker-containers
