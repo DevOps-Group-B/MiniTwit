@@ -320,7 +320,7 @@
     pull: true
     env:
       POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
-      VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }},165.227.170.149"
+      VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }},138.68.126.154"
       VIRTUAL_PORT: "{{ app_port }}"
       LETSENCRYPT_HOST: "{{ domain_name }}"
       LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
