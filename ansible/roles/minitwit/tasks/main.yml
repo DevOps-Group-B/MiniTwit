@@ -93,6 +93,17 @@
     - notify_fault.sh
   become: true
 
+- name: Store DigitalOcean API token for keepalived failover
+  ansible.builtin.copy:
+    content: "{{ do_api_token }}"
+    dest: /etc/minitwit_do_token
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  when: do_api_token is defined and do_api_token != ""
+  no_log: true
+
 - name: Deploy keepalived configuration (primary server)
   ansible.builtin.template:
     src: keepalived-primary.conf.j2
