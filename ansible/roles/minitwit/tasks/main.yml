@@ -64,11 +64,10 @@
     state: present
   become: true
 
-- name: Enable and start keepalived service
+- name: Enable keepalived service
   ansible.builtin.systemd:
     name: keepalived
     enabled: true
-    state: started
   become: true
 
 # --- High Availability Setup ---
@@ -115,6 +114,16 @@
   notify: restart keepalived
   become: true
   when: inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Start keepalived after config is deployed
+  ansible.builtin.systemd:
+    name: keepalived
+    state: started
+    daemon_reload: true
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
 
 - name: Deploy logrotate policy for Docker container logs
   ansible.builtin.copy:
