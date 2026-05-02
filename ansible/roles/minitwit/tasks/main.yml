@@ -64,12 +64,6 @@
     state: present
   become: true
 
-- name: Install curl for DigitalOcean API failover hook
-  ansible.builtin.apt:
-    name: curl
-    state: present
-  become: true
-
 - name: Enable keepalived service
   ansible.builtin.systemd:
     name: keepalived
@@ -86,33 +80,17 @@
     mode: '0755'
   become: true
 
-- name: Store DigitalOcean API token for keepalived notify hook
-  ansible.builtin.copy:
-    content: "{{ do_api_token }}"
-    dest: /etc/minitwit_do_token
-    owner: root
-    group: root
-    mode: '0600'
-  become: true
-  when:
-    - do_api_token | default('') | length > 0
-    - inventory_hostname in groups.get('minitwit_lb_primary', []) or
-      inventory_hostname in groups.get('minitwit_lb_secondary', [])
-
 - name: Deploy keepalived notify scripts
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
     owner: root
     group: root
     mode: '0755'
   loop:
-    - src: notify_primary.sh.j2
-      dest: /usr/local/bin/notify_primary.sh
-    - src: notify_backup.sh.j2
-      dest: /usr/local/bin/notify_backup.sh
-    - src: notify_fault.sh.j2
-      dest: /usr/local/bin/notify_fault.sh
+    - notify_primary.sh
+    - notify_backup.sh
+    - notify_fault.sh
   become: true
 
 - name: Deploy keepalived configuration (primary server)
