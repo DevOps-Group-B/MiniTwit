@@ -13,6 +13,8 @@
     # These fall back to 'latest' if run locally via Vagrant
     dockerhub_user: "{{ dockerhub_username | default('sn3ke') }}"
     app_version: "{{ image_tag | default('latest') }}"
+    # DigitalOcean API token for floating IP failover (pass via -e do_api_token=<token>)
+    do_api_token: "{{ do_api_token | default('', true) }}"
 
   roles:
     - minitwit
