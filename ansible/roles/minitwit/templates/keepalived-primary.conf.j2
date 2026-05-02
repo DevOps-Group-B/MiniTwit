@@ -13,7 +13,7 @@ vrrp_script check_nginx {
 
 vrrp_instance VI_1 {
     state MASTER
-    interface eth0
+    interface {{ keepalived_interface }}
     virtual_router_id 51
     priority 150
     advert_int 1
@@ -22,7 +22,7 @@ vrrp_instance VI_1 {
         auth_pass minitwit_vrrp_pass_2026
     }
     virtual_ipaddress {
-        138.68.126.154/24
+        {{ floating_ip }}/24
     }
     track_script {
         check_nginx

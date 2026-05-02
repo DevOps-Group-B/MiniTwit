@@ -1,3 +1,5 @@
 alloy_docker_containers_host_path: /var/lib/docker/containers
 loki_config_uid: 10001
 loki_config_gid: 10001
+floating_ip: 138.68.126.154
+keepalived_interface: eth0
