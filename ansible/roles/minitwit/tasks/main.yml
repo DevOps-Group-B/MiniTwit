@@ -64,6 +64,14 @@
     state: present
   become: true
 
+- name: Remove system nginx if present (conflicts with Docker nginx-proxy)
+  ansible.builtin.apt:
+    name: nginx
+    state: absent
+    purge: true
+  become: true
+  failed_when: false
+
 - name: Enable keepalived service
   ansible.builtin.systemd:
     name: keepalived
