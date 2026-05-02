@@ -1,29 +1,27 @@
 #!/bin/bash
-# Notification script when transitioning to MASTER state
-# This script assigns the floating IP to the current droplet via the DigitalOcean API
+# Notification script when transitioning to MASTER state.
+# This follows the DigitalOcean Reserved IP pattern with a metadata check and retries.
 
-FLOATING_IP="138.68.126.154"
+RESERVED_IP="138.68.126.154"
 LOGFILE="/var/log/keepalived-notify.log"
 TOKEN_FILE="/etc/minitwit_do_token"
-METADATA_URL="http://169.254.169.254/metadata/v1/id"
+METADATA_ID_URL="http://169.254.169.254/metadata/v1/id"
+METADATA_RESERVED_IP_URL="http://169.254.169.254/metadata/v1/reserved_ip/ipv4/active"
 
 log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" >> "$LOGFILE"
 }
 
-log_message "Transitioned to MASTER state, attempting to assign floating IP $FLOATING_IP to this server"
+log_message "Transitioned to MASTER state, checking Reserved IP $RESERVED_IP"
 
-# Check if token file exists
 if [ ! -f "$TOKEN_FILE" ]; then
     log_message "ERROR: DigitalOcean API token not found at $TOKEN_FILE"
     exit 1
 fi
 
-# Read the token
 API_TOKEN=$(cat "$TOKEN_FILE")
-
-# Get the current droplet ID from DigitalOcean metadata
-DROPLET_ID=$(curl -s --connect-timeout 5 -m 5 "$METADATA_URL")
+DROPLET_ID=$(curl -s --connect-timeout 5 -m 5 "$METADATA_ID_URL")
+HAS_RESERVED_IP=$(curl -s --connect-timeout 5 -m 5 "$METADATA_RESERVED_IP_URL")
 
 if [ -z "$DROPLET_ID" ]; then
     log_message "ERROR: Failed to retrieve droplet ID from metadata endpoint"
@@ -32,19 +30,33 @@ fi
 
 log_message "Current droplet ID: $DROPLET_ID"
 
-# Assign the floating IP to this droplet
-RESPONSE=$(curl -s -X POST \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $API_TOKEN" \
-    -d "{\"type\":\"assign\",\"droplet_id\":$DROPLET_ID}" \
-    "https://api.digitalocean.com/v2/floating_ips/$FLOATING_IP/actions")
-
-# Check if the API call was successful
-if echo "$RESPONSE" | grep -q '"status":"in-progress"'; then
-    log_message "Successfully assigned floating IP $FLOATING_IP to droplet $DROPLET_ID"
-elif echo "$RESPONSE" | grep -q '"already_assigned"'; then
-    log_message "Floating IP $FLOATING_IP was already assigned to this droplet"
-else
-    log_message "ERROR: Failed to assign floating IP. Response: $RESPONSE"
-    exit 1
+if [ "$HAS_RESERVED_IP" = "true" ]; then
+    log_message "Reserved IP $RESERVED_IP is already active on this droplet"
+    exit 0
 fi
+
+n=0
+while [ "$n" -lt 10 ]; do
+    RESPONSE=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $API_TOKEN" \
+        -d "{\"type\":\"assign\",\"droplet_id\":$DROPLET_ID}" \
+        "https://api.digitalocean.com/v2/floating_ips/$RESERVED_IP/actions")
+
+    if echo "$RESPONSE" | grep -q '"status":"in-progress"'; then
+        log_message "Successfully requested Reserved IP $RESERVED_IP assignment to droplet $DROPLET_ID"
+        exit 0
+    fi
+
+    if echo "$RESPONSE" | grep -q 'already_assigned'; then
+        log_message "Reserved IP $RESERVED_IP was already assigned to this droplet"
+        exit 0
+    fi
+
+    n=$((n + 1))
+    log_message "Reserved IP assignment attempt $n failed, retrying in 3 seconds. Response: $RESPONSE"
+    sleep 3
+done
+
+log_message "ERROR: Failed to assign Reserved IP $RESERVED_IP after 10 attempts"
+exit 1
