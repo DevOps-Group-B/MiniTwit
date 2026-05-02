@@ -17,6 +17,10 @@ vrrp_instance VI_1 {
     virtual_router_id 51
     priority 100
     advert_int 1
+    unicast_src_ip {{ hostvars[inventory_hostname].ansible_host }}
+    unicast_peer {
+        {{ hostvars[groups['minitwit_lb_primary'][0]].ansible_host }}
+    }
     authentication {
         auth_type PASS
         auth_pass minitwit_vrrp_pass_2026
