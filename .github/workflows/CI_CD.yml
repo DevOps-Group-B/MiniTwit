@@ -175,7 +175,7 @@ jobs:
 
       # --- STAGE 4: SERVER DEPLOYMENT (via Ansible) ---
       - name: Run Ansible Playbook
-        uses: dawiii6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v2
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           GRAFANA_ADMIN_USER: ${{ secrets.GRAFANA_ADMIN_USER }}
