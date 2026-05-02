@@ -142,6 +142,7 @@ To enable successful deployments, the following secrets must be configured in th
 * **`DOCKERHUB_USERNAME`**: Your Docker Hub account ID.
 * **`DOCKERHUB_TOKEN`**: A Personal Access Token (PAT) for Docker Hub.
 * **`POSTGRES_CONNECTION_STRING`**: PostgreSQL connection string (e.g., `Host=164.92.164.171;Database=minitwit;Username=minitwit_user;Password=your_password;Port=5432`)
+* **`DIGITALOCEAN_API_TOKEN`**: Personal access token used by keepalived notify hooks to reassign the DigitalOcean Floating IP to the active node during failover.
 
 ### Database Setup
 The application requires a PostgreSQL 15+ database server. Connection details are passed via the `POSTGRES_CONNECTION_STRING` environment variable.

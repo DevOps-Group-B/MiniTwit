@@ -1,0 +1,3 @@
+#!/bin/bash
+# Transition to FAULT: log health check failure.
+echo "$(date): Entered FAULT state on $(hostname), health check failed" >> /var/log/keepalived-notify.log
