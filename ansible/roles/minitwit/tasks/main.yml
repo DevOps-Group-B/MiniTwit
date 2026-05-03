@@ -354,6 +354,7 @@
       - "nginx-certs:/etc/nginx/certs:ro"
       - "nginx-vhost:/etc/nginx/vhost.d"
       - "nginx-html:/usr/share/nginx/html"
+      - "/opt/minitwit/nginx.tmpl:/app/docker-gen/templates/nginx.tmpl:ro"
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
     networks:
       - name: minitwit_network
@@ -377,6 +378,15 @@
       - "acme:/etc/acme.sh"
     networks:
       - name: minitwit_network
+
+- name: Deploy custom docker-gen nginx template file
+  ansible.builtin.copy:
+    src: nginx.tmpl
+    dest: /opt/minitwit/nginx.tmpl
+    owner: root
+    group: root
+    mode: '0640'
+  become: true
 - name: Cleanup dangling images
   community.docker.docker_prune:
     images: true
