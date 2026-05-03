@@ -321,14 +321,20 @@
       - name: minitwit_network
 
 # --- Deploy MiniTwit App ---
-- name: Pull and Run MiniTwit Containers
+- name: Pull MiniTwit image once before rolling upgrade
+  community.docker.docker_image:
+    name: "{{ dockerhub_user }}/{{ image_name }}"
+    tag: "{{ app_version }}"
+    source: pull
+
+- name: Recreate MiniTwit instances one-by-one
   community.docker.docker_container:
-    name: "{{ container_name }}-{{ item }}"
+    name: "{{ container_name }}-{{ minitwit_instance }}"
     image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
     state: started
     restart_policy: always
     recreate: true
-    pull: true
+    pull: false
     env:
       POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
       VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }}"
@@ -340,6 +346,34 @@
     networks:
       - name: minitwit_network
   loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
+  loop_control:
+    loop_var: minitwit_instance
+
+- name: Collect container info after rolling recreation
+  community.docker.docker_container_info:
+    name: "{{ container_name }}-{{ minitwit_instance }}"
+  loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
+  loop_control:
+    loop_var: minitwit_instance
+  register: minitwit_container_infos
+
+- name: Wait for each MiniTwit instance to listen on app port
+  ansible.builtin.wait_for:
+    host: "{{ (item.container.NetworkSettings.Networks | dict2items | first).value.IPAddress }}"
+    port: "{{ app_port | int }}"
+    timeout: 60
+  loop: "{{ minitwit_container_infos.results }}"
+
+- name: Verify proxy still serves traffic after rolling recreation
+  ansible.builtin.uri:
+    url: http://127.0.0.1/
+    headers:
+      Host: "{{ domain_name }}"
+    status_code: [200, 301, 302]
+  register: proxy_healthcheck
+  retries: 10
+  delay: 3
+  until: proxy_healthcheck.status in [200, 301, 302]
 
 - name: Check custom docker-gen nginx template path type
   ansible.builtin.stat:
