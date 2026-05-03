@@ -321,9 +321,9 @@
       - name: minitwit_network
 
 # --- Deploy MiniTwit App ---
-- name: Pull and Run MiniTwit Container
+- name: Pull and Run MiniTwit Containers
   community.docker.docker_container:
-    name: "{{ container_name }}"
+    name: "{{ container_name }}-{{ item }}"
     image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
     state: started
     restart_policy: always
@@ -331,12 +331,13 @@
     pull: true
     env:
       POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
-      VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }},138.68.126.154"
+      VIRTUAL_HOST: "{{ domain_name }},www.{{ domain_name }}"
       VIRTUAL_PORT: "{{ app_port }}"
       LETSENCRYPT_HOST: "{{ domain_name }}"
       LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
     networks:
       - name: minitwit_network
+  loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
 
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
