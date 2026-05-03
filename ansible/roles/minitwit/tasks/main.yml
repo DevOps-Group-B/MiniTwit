@@ -347,7 +347,7 @@
     dest: /opt/minitwit/nginx.tmpl
     owner: root
     group: root
-    mode: '0644'
+    mode: '0640'
   become: true
 
 - name: Pull and Run Nginx Proxy Container
