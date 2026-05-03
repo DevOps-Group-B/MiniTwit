@@ -385,7 +385,7 @@
     dest: /opt/minitwit/nginx.tmpl
     owner: root
     group: root
-    mode: '0644'
+    mode: '0640'
   become: true
 - name: Cleanup dangling images
   community.docker.docker_prune:
