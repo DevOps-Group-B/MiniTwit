@@ -6,7 +6,7 @@ global_defs {
 vrrp_script check_nginx {
     script "/usr/local/bin/check_nginx.sh"
     interval 2
-    weight -20
+    weight -60
     fall 3
     rise 2
 }
