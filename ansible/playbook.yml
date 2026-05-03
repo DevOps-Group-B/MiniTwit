@@ -6,6 +6,7 @@
   vars:
     image_name: "minitwitimage"
     container_name: "minitwit"
+    minitwit_app_instances: 2
     app_port: "5273"
     db_volume: "minitwit_db_volume"
     domain_name: "{{ domain_name | default('minitwit.tech', true) }}"
