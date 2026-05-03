@@ -335,9 +335,20 @@
       VIRTUAL_PORT: "{{ app_port }}"
       LETSENCRYPT_HOST: "{{ domain_name }}"
       LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
+    labels:
+      com.github.nginx-proxy.nginx-proxy.loadbalance: "ip_hash;"
     networks:
       - name: minitwit_network
   loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
+
+- name: Deploy custom docker-gen nginx template file
+  ansible.builtin.copy:
+    src: nginx.tmpl
+    dest: /opt/minitwit/nginx.tmpl
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
 
 - name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
@@ -354,7 +365,7 @@
       - "nginx-certs:/etc/nginx/certs:ro"
       - "nginx-vhost:/etc/nginx/vhost.d"
       - "nginx-html:/usr/share/nginx/html"
-      - "/opt/minitwit/nginx.tmpl:/app/docker-gen/templates/nginx.tmpl:ro"
+      - "/opt/minitwit/nginx.tmpl:/app/nginx.tmpl:ro"
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
     networks:
       - name: minitwit_network
@@ -379,14 +390,6 @@
     networks:
       - name: minitwit_network
 
-- name: Deploy custom docker-gen nginx template file
-  ansible.builtin.copy:
-    src: nginx.tmpl
-    dest: /opt/minitwit/nginx.tmpl
-    owner: root
-    group: root
-    mode: '0640'
-  become: true
 - name: Cleanup dangling images
   community.docker.docker_prune:
     images: true
