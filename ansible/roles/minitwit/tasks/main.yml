@@ -331,20 +331,18 @@
 
 - name: Resolve MiniTwit container environment
   ansible.builtin.set_fact:
-    minitwit_container_env: >-
-      {{
-        {
-          'POSTGRES_CONNECTION_STRING': postgres_connection_string,
-          'VIRTUAL_PORT': app_port
-        }
-        | combine(
-            {} if not (tls_proxy_enabled | bool) else {
-              'VIRTUAL_HOST': domain_name + ',www.' + domain_name,
-              'LETSENCRYPT_HOST': domain_name,
-              'LETSENCRYPT_EMAIL': letsencrypt_email
-            }
-          )
-      }}
+    minitwit_container_env:
+      POSTGRES_CONNECTION_STRING: "{{ postgres_connection_string }}"
+      VIRTUAL_PORT: "{{ app_port }}"
+
+- name: Append TLS proxy configuration to environment
+  ansible.builtin.set_fact:
+    minitwit_container_env: "{{ minitwit_container_env | combine({
+      'VIRTUAL_HOST': domain_name + ',www.' + domain_name,
+      'LETSENCRYPT_HOST': domain_name,
+      'LETSENCRYPT_EMAIL': letsencrypt_email
+    }) }}"
+  when: tls_proxy_enabled | default(true) | bool
 
 - name: Pull MiniTwit image once before rolling recreation
   community.docker.docker_image:
