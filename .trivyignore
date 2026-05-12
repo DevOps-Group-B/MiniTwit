@@ -1,0 +1,36 @@
+# Upstream vulnerabilities compiled into the Prometheus v3.11.2 binary.
+# Ignored as we cannot be fix it, Prometheus needs to update their code.
+CVE-2026-32285
+CVE-2026-34040
+CVE-2026-39883
+CVE-2026-33811
+CVE-2026-33814 
+CVE-2026-39820
+CVE-2026-39836
+CVE-2026-42499
+
+# Upstream vulnerabilities from Grafana base image and bundled plugin binaries.
+# Ignored as we cannot be fix it, Grafana needs to update their code.
+CVE-2026-28390
+CVE-2026-22184
+CVE-2026-25679
+CVE-2026-27137
+CVE-2026-32280
+CVE-2026-32282
+CVE-2026-40200
+CVE-2026-33816
+CVE-2026-32281
+CVE-2026-32283
+CVE-2026-33810
+CVE-2026-42151
+CVE-2026-21728
+CVE-2026-28377
+CVE-2026-42154
+CVE-2026-41602
+# Alpine 3.23.3 base image CVEs (OpenSSL and nghttp2)
+# Patches available but not yet in base image tags
+CVE-2026-31789
+CVE-2026-28387
+CVE-2026-28388
+CVE-2026-28389
+CVE-2026-27135

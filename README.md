@@ -83,6 +83,36 @@ To focus on HTTP request logs from the web app, try:
 {job="docker"} |= "HTTP"
 ```
 
+### Production Log Rotation (logrotate)
+Production deployments via Ansible now install `logrotate` and deploy a policy in
+`/etc/logrotate.d/minitwit-docker-containers` for Docker JSON logs at
+`/var/lib/docker/containers/*/*-json.log`.
+
+Policy:
+
+* weekly rotation
+* rotate 14 archives
+* size threshold 50M
+* compress + delaycompress
+* dateext
+* copytruncate
+
+Quick verification on a server:
+
+```bash
+sudo ls -l /etc/logrotate.d/minitwit-docker-containers
+sudo cat /etc/logrotate.d/minitwit-docker-containers
+sudo logrotate --debug /etc/logrotate.conf
+```
+
+Force a test rotation:
+
+```bash
+sudo logrotate --force /etc/logrotate.conf
+sudo ls -lah /var/lib/docker/containers/*/*-json.log*
+docker logs --tail 20 minitwit
+```
+
 ---
 
 ### 3. Manual Docker (Single Container)

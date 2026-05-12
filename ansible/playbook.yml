@@ -51,23 +51,24 @@
 
 # PLAY 2: CONFIGURE WEB SERVER & MONITORING
 - name: Provision and deploy MiniTwit
-  hosts: web_servers
+  hosts: "web_servers:minitwit_servers"
   become: true
   vars:
     deployment_mode: "production"
     image_name: "minitwitimage"
     container_name: "minitwit"
+    minitwit_app_instances: 2
     app_port: "5273"
-    domain_name: "minitwit.tech"
-    letsencrypt_email: "bror@live.dk"
-    dockerhub_user: "sn3ke"
+    domain_name: "{{ domain_name | default('minitwit.tech', true) }}"
+    letsencrypt_email: "{{ letsencrypt_email | default('bror@live.dk', true) }}"
+    dockerhub_user: "{{ dockerhub_username | default('sn3ke', true) }}"
     app_version: "{{ image_tag | default('latest') }}"
-    # Build connection string dynamically
-    db_conn_production: "Host={{ db_internal_ip }};Database=minitwit;Username=minitwit_user;Password=password123"
-    postgres_connection_string: "{{ db_conn_production }}"
-    grafana_admin_user: "admin"
-    grafana_admin_password: "password123"
-    tls_proxy_enabled: true
-  
+    db_conn_production: "Host={{ db_internal_ip | default('127.0.0.1') }};Database=minitwit;Username=minitwit_user;Password=password123"
+    postgres_connection_string: "{{ postgres_connection_string | default(db_conn_production, true) }}"
+    grafana_admin_user: "{{ grafana_admin_user | default('admin', true) }}"
+    grafana_admin_password: "{{ grafana_admin_password | default('password123', true) }}"
+    tls_proxy_enabled: "{{ tls_proxy_enabled | default(true) }}"
+    # DigitalOcean API token for floating IP failover (pass via -e do_api_token=<token>)
+    do_api_token: "{{ do_api_token | default('', true) }}"
   roles:
     - minitwit

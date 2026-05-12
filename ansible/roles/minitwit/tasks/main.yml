@@ -1,4 +1,325 @@
-- name: Resolve container environment
+- name: Force clear apt locks and corrupted cache
+  ansible.builtin.shell: |
+    rm -f /var/lib/apt/lists/lock
+    rm -f /var/cache/apt/archives/lock
+    rm -f /var/lib/dpkg/lock*
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    rm -f /etc/apt/sources.list.d/docker*.list
+    rm -f /etc/apt/sources.list.d/*docker*
+    rm -f /etc/apt/trusted.gpg.d/docker*
+    rm -f /etc/apt/keyrings/docker.gpg
+  become: true
+  changed_when: true
+
+- name: Remove legacy Docker repository entry
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    state: absent
+  become: true
+
+- name: Remove legacy Docker GPG key file
+  ansible.builtin.file:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+    state: absent
+  become: true
+
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: true
+  become: true
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+    state: present
+  become: true
+
+- name: Install Docker CE and utilities
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - logrotate
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install keepalived on HA nodes
+  ansible.builtin.apt:
+    name: keepalived
+    state: present
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Enable keepalived service on HA nodes
+  ansible.builtin.systemd:
+    name: keepalived
+    enabled: true
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Deploy Nginx health check script
+  ansible.builtin.copy:
+    src: check_nginx.sh
+    dest: /usr/local/bin/check_nginx.sh
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Deploy keepalived notify scripts
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - notify_primary.sh
+    - notify_backup.sh
+    - notify_fault.sh
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Store DigitalOcean API token for keepalived failover
+  ansible.builtin.copy:
+    content: "{{ do_api_token }}"
+    dest: /etc/minitwit_do_token
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  when:
+    - do_api_token is defined
+    - do_api_token != ""
+    - inventory_hostname in groups.get('minitwit_lb_primary', []) or inventory_hostname in groups.get('minitwit_lb_secondary', [])
+  no_log: true
+
+- name: Deploy keepalived configuration (primary server)
+  ansible.builtin.template:
+    src: keepalived-primary.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart keepalived
+  become: true
+  when: inventory_hostname in groups.get('minitwit_lb_primary', [])
+
+- name: Deploy keepalived configuration (secondary server)
+  ansible.builtin.template:
+    src: keepalived-secondary.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart keepalived
+  become: true
+  when: inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Start keepalived after config is deployed
+  ansible.builtin.systemd:
+    name: keepalived
+    state: started
+    daemon_reload: true
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Deploy logrotate policy for Docker container logs
+  ansible.builtin.copy:
+    src: logrotate/minitwit-docker-containers
+    dest: /etc/logrotate.d/minitwit-docker-containers
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Create Docker network for monitoring
+  community.docker.docker_network:
+    name: minitwit_network
+    state: present
+
+- name: Create monitoring config directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/minitwit
+    - /opt/minitwit/monitoring
+    - /opt/minitwit/monitoring/loki
+    - /opt/minitwit/monitoring/alloy
+  become: true
+
+- name: Copy Loki production config
+  ansible.builtin.copy:
+    src: monitoring/loki/config.yml
+    dest: /opt/minitwit/monitoring/loki/config.yml
+    owner: "{{ loki_config_uid }}"
+    group: "{{ loki_config_gid }}"
+    mode: '0640'
+  become: true
+
+- name: Copy Alloy production config
+  ansible.builtin.copy:
+    src: monitoring/alloy/config.alloy
+    dest: /opt/minitwit/monitoring/alloy/config.alloy
+    mode: '0640'
+  become: true
+
+- name: Validate Alloy Docker log bind mount path
+  ansible.builtin.assert:
+    that:
+      - alloy_docker_containers_host_path == '/var/lib/docker/containers'
+    fail_msg: >-
+      Unsafe Alloy log mount path '{{ alloy_docker_containers_host_path }}'.
+      Only '/var/lib/docker/containers' is allowed.
+
+- name: Log in to Docker Hub
+  community.docker.docker_login:
+    username: "{{ dockerhub_user }}"
+    password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+  when: lookup('env', 'DOCKERHUB_TOKEN') != ""
+
+- name: Create shared Docker volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - loki-storage
+    - grafana-storage
+    - nginx-certs
+    - nginx-vhost
+    - nginx-html
+    - acme
+
+- name: Pull and Run Prometheus Container
+  community.docker.docker_container:
+    name: itu-minitwit-prometheus
+    image: "{{ dockerhub_user }}/prometheus_image:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    ports:
+      - "9090:9090"
+    networks:
+      - name: minitwit_network
+        aliases:
+          - prometheus
+
+- name: Pull and Run Node Exporter Container
+  community.docker.docker_container:
+    name: itu-minitwit-node-exporter
+    image: prom/node-exporter:latest
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+    pid_mode: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - name: minitwit_network
+        aliases:
+          - node-exporter
+
+- name: Pull and Run Loki Container
+  community.docker.docker_container:
+    name: itu-minitwit-loki
+    image: grafana/loki:3.5.0
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - /opt/minitwit/monitoring/loki/config.yml:/etc/loki/config.yml:ro
+      - loki-storage:/loki
+    networks:
+      - name: minitwit_network
+        aliases:
+          - loki
+
+- name: Pull and Run Alloy Container
+  community.docker.docker_container:
+    name: itu-minitwit-alloy
+    image: grafana/alloy:latest
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/tmp/alloy /etc/alloy/config.alloy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opts:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    ports:
+      - "12345:12345"
+    volumes:
+      - /opt/minitwit/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - "{{ alloy_docker_containers_host_path }}:/var/lib/docker/containers:ro"
+    networks:
+      - name: minitwit_network
+
+- name: Pull and Run Grafana Container
+  community.docker.docker_container:
+    name: itu-minitwit-grafana
+    image: "{{ dockerhub_user }}/grafana_image:latest"
+    state: started
+    restart_policy: always
+    recreate: true
+    pull: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    env:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: Main Org.
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+    networks:
+      - name: minitwit_network
+
+- name: Resolve MiniTwit container environment
   ansible.builtin.set_fact:
     minitwit_container_env: >-
       {{
@@ -7,103 +328,123 @@
           'VIRTUAL_PORT': app_port
         }
         | combine(
-            {} if not tls_proxy_enabled else {
-              'VIRTUAL_HOST': domain_name,
+            {} if not (tls_proxy_enabled | bool) else {
+              'VIRTUAL_HOST': domain_name + ',www.' + domain_name,
               'LETSENCRYPT_HOST': domain_name,
               'LETSENCRYPT_EMAIL': letsencrypt_email
             }
           )
       }}
 
-- name: Install Docker CE
-  ansible.builtin.apt:
-    name: [docker-ce, docker-ce-cli, containerd.io]
-    state: present
-    update_cache: true
-  become: true
+- name: Pull MiniTwit image once before rolling recreation
+  community.docker.docker_image:
+    name: "{{ dockerhub_user }}/{{ image_name }}"
+    tag: "{{ app_version }}"
+    source: pull
 
-- name: Create Docker network
-  community.docker.docker_network:
-    name: minitwit_network
-    state: present
-
-- name: Create monitoring config directories
-  ansible.builtin.file:
-    path: "/opt/minitwit/monitoring/{{ item }}"
-    state: directory
-    mode: '0755'
-  loop: [loki, alloy]
-  become: true
-
-- name: Log in to Docker Hub
-  community.docker.docker_login:
-    username: "{{ dockerhub_user }}"
-    password: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
-  when: lookup('env', 'DOCKERHUB_TOKEN') != ""
-
-- name: Run MiniTwit App Container
+- name: Recreate MiniTwit instances one-by-one
   community.docker.docker_container:
-    name: "{{ container_name }}"
+    name: "{{ container_name }}-{{ minitwit_instance }}"
     image: "{{ dockerhub_user }}/{{ image_name }}:{{ app_version }}"
     state: started
     restart_policy: always
     recreate: true
+    pull: false
     env: "{{ minitwit_container_env }}"
-    networks: [{name: minitwit_network}]
+    labels:
+      com.github.nginx-proxy.nginx-proxy.loadbalance: ip_hash;
+    networks:
+      - name: minitwit_network
+  loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
+  loop_control:
+    loop_var: minitwit_instance
 
-- name: Run Prometheus
+- name: Collect container info after rolling recreation
+  community.docker.docker_container_info:
+    name: "{{ container_name }}-{{ minitwit_instance }}"
+  loop: "{{ range(1, minitwit_app_instances | int + 1) | list }}"
+  loop_control:
+    loop_var: minitwit_instance
+  register: minitwit_container_infos
+
+- name: Wait for each MiniTwit instance to listen on app port
+  ansible.builtin.wait_for:
+    host: "{{ (item.container.NetworkSettings.Networks | dict2items | first).value.IPAddress }}"
+    port: "{{ app_port | int }}"
+    timeout: 60
+  loop: "{{ minitwit_container_infos.results }}"
+
+- name: Check custom docker-gen nginx template path type
+  ansible.builtin.stat:
+    path: /opt/minitwit/nginx.tmpl
+  register: nginx_tmpl_path
+  become: true
+
+- name: Remove stale nginx template directory
+  ansible.builtin.file:
+    path: /opt/minitwit/nginx.tmpl
+    state: absent
+  become: true
+  when: nginx_tmpl_path.stat.exists and nginx_tmpl_path.stat.isdir
+
+- name: Deploy custom docker-gen nginx template file
+  ansible.builtin.copy:
+    src: nginx.tmpl
+    dest: /opt/minitwit/nginx.tmpl
+    owner: root
+    group: root
+    mode: '0640'
+  become: true
+
+- name: Pull and Run Nginx Proxy Container
   community.docker.docker_container:
-    name: "itu-minitwit-prometheus"
-    image: "{{ dockerhub_user }}/prometheus_image:latest"
+    name: itu-minitwit-nginx-proxy
+    image: nginxproxy/nginx-proxy:1.6
     state: started
     restart_policy: always
-    networks: [{name: minitwit_network, aliases: [prometheus]}]
-    ports: ["9090:9090"]
-
-- name: Run Grafana
-  community.docker.docker_container:
-    name: "itu-minitwit-grafana"
-    image: "{{ dockerhub_user }}/grafana_image:latest"
-    state: started
-    restart_policy: always
-    networks: [{name: minitwit_network}]
-    ports: ["3000:3000"]
-    env:
-      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
-      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
-
-- name: Run Nginx Proxy
-  community.docker.docker_container:
-    name: "itu-minitwit-nginx-proxy"
-    image: "nginxproxy/nginx-proxy:1.6"
-    state: started
-    restart_policy: always
-    ports: ["80:80", "443:443"]
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
-      - "nginx-certs:/etc/nginx/certs:ro"
-      - "nginx-vhost:/etc/nginx/vhost.d"
-      - "nginx-html:/usr/share/nginx/html"
-      - "/var/run/docker.sock:/tmp/docker.sock:ro"
-    networks: [{name: minitwit_network}]
-  when: tls_proxy_enabled
+      - nginx-certs:/etc/nginx/certs:ro
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - /opt/minitwit/nginx.tmpl:/app/nginx.tmpl:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - name: minitwit_network
+  when: tls_proxy_enabled | bool
 
-- name: Run ACME Companion
+- name: Pull and Run ACME Companion Container
   community.docker.docker_container:
-    name: "itu-minitwit-acme-companion"
-    image: "nginxproxy/acme-companion:2.5"
+    name: itu-minitwit-acme-companion
+    image: nginxproxy/acme-companion:2.5
     state: started
     restart_policy: always
     env:
-      NGINX_PROXY_CONTAINER: "itu-minitwit-nginx-proxy"
+      NGINX_PROXY_CONTAINER: itu-minitwit-nginx-proxy
       DEFAULT_EMAIL: "{{ letsencrypt_email }}"
     volumes:
-      - "nginx-certs:/etc/nginx/certs"
-      - "nginx-vhost:/etc/nginx/vhost.d"
-      - "nginx-html:/usr/share/nginx/html"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "acme:/etc/acme.sh"
-    networks: [{name: minitwit_network}]
-  when: tls_proxy_enabled
+      - nginx-certs:/etc/nginx/certs
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+    networks:
+      - name: minitwit_network
+  when: tls_proxy_enabled | bool
+
+- name: Verify proxy serves traffic
+  ansible.builtin.uri:
+    url: http://127.0.0.1/
+    headers:
+      Host: "{{ domain_name }}"
+    status_code: [200, 301, 302]
+  register: proxy_healthcheck
+  retries: 10
+  delay: 3
+  until: proxy_healthcheck.status in [200, 301, 302]
+  when: tls_proxy_enabled | bool
 
 - name: Cleanup dangling images
   community.docker.docker_prune:
