@@ -84,7 +84,7 @@ variable "digitalocean_token" {
 variable "digitalocean_region" {
   type        = string
   description = "DigitalOcean region for droplet deployment"
-  default     = "FRA1"
+  default     = "fra1"
 }
 
 variable "digitalocean_droplet_size" {
