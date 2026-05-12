@@ -4,30 +4,53 @@ data "digitalocean_ssh_key" "default" {
 }
 
 # ==========================================================
-# 1. DROPLETS
+# 1. DROPLETS (HA APP/LB + DB)
 # ==========================================================
-resource "digitalocean_droplet" "minitwit" {
-  name       = "${var.project_name}-web-prod"
-  region     = var.digitalocean_region
-  size       = var.digitalocean_droplet_size
-  image      = "ubuntu-24-04-x64"
-  ssh_keys   = [data.digitalocean_ssh_key.default.id]
+resource "digitalocean_droplet" "minitwit_lb_primary" {
+  name     = "${var.project_name}-lb-primary-prod"
+  region   = var.digitalocean_region
+  size     = var.digitalocean_droplet_size
+  image    = "ubuntu-24-04-x64"
+  ssh_keys = [data.digitalocean_ssh_key.default.id]
+}
+
+resource "digitalocean_droplet" "minitwit_lb_secondary" {
+  name     = "${var.project_name}-lb-secondary-prod"
+  region   = var.digitalocean_region
+  size     = var.digitalocean_droplet_size
+  image    = "ubuntu-24-04-x64"
+  ssh_keys = [data.digitalocean_ssh_key.default.id]
 }
 
 resource "digitalocean_droplet" "database" {
-  name       = "${var.project_name}-db-prod"
-  region     = var.digitalocean_region
-  size       = "s-1vcpu-1gb"
-  image      = "ubuntu-24-04-x64"
-  ssh_keys   = [data.digitalocean_ssh_key.default.id]
+  name     = "${var.project_name}-db-prod"
+  region   = var.digitalocean_region
+  size     = var.digitalocean_db_droplet_size
+  image    = "ubuntu-24-04-x64"
+  ssh_keys = [data.digitalocean_ssh_key.default.id]
 }
 
 # ==========================================================
-# 2. FIREWALLS
+# 2. FLOATING IP (FAILOVER ENDPOINT)
+# ==========================================================
+resource "digitalocean_floating_ip" "minitwit" {
+  region = var.digitalocean_region
+}
+
+resource "digitalocean_floating_ip_assignment" "minitwit_primary" {
+  ip_address = digitalocean_floating_ip.minitwit.ip_address
+  droplet_id = digitalocean_droplet.minitwit_lb_primary.id
+}
+
+# ==========================================================
+# 3. FIREWALLS
 # ==========================================================
 resource "digitalocean_firewall" "web" {
-  name        = "minitwit-web-firewall"
-  droplet_ids = [digitalocean_droplet.minitwit.id]
+  name = "minitwit-web-firewall"
+  droplet_ids = [
+    digitalocean_droplet.minitwit_lb_primary.id,
+    digitalocean_droplet.minitwit_lb_secondary.id,
+  ]
 
   inbound_rule {
     protocol         = "tcp"
@@ -65,9 +88,12 @@ resource "digitalocean_firewall" "database" {
   }
 
   inbound_rule {
-    protocol         = "tcp"
-    port_range       = "5432"
-    source_droplet_ids = [digitalocean_droplet.minitwit.id] # Only Web can talk to DB
+    protocol          = "tcp"
+    port_range        = "5432"
+    source_droplet_ids = [
+      digitalocean_droplet.minitwit_lb_primary.id,
+      digitalocean_droplet.minitwit_lb_secondary.id,
+    ]
   }
 
   outbound_rule {
@@ -78,21 +104,27 @@ resource "digitalocean_firewall" "database" {
 }
 
 # ==========================================================
-# 3. ANSIBLE INVENTORY & PROVISIONING
+# 4. ANSIBLE INVENTORY & PROVISIONING
 # ==========================================================
 resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventory.ini"
-  content  = templatefile("${path.module}/templates/inventory-production.tpl", {
-    web_ip       = digitalocean_droplet.minitwit.ipv4_address
-    db_ip        = digitalocean_droplet.database.ipv4_address
-    ssh_key_path = pathexpand(var.ssh_private_key_path)
-    project_name = var.project_name
+  content = templatefile("${path.module}/templates/inventory-production.tpl", {
+    primary_web_ip   = digitalocean_droplet.minitwit_lb_primary.ipv4_address
+    secondary_web_ip = digitalocean_droplet.minitwit_lb_secondary.ipv4_address
+    db_ip            = digitalocean_droplet.database.ipv4_address
+    floating_ip      = digitalocean_floating_ip.minitwit.ip_address
+    ssh_key_path     = pathexpand(var.ssh_private_key_path)
+    project_name     = var.project_name
   })
 }
 
 resource "time_sleep" "wait_for_droplets" {
   create_duration = "30s"
-  depends_on      = [digitalocean_droplet.minitwit, digitalocean_droplet.database]
+  depends_on = [
+    digitalocean_droplet.minitwit_lb_primary,
+    digitalocean_droplet.minitwit_lb_secondary,
+    digitalocean_droplet.database,
+  ]
 }
 
 resource "null_resource" "ansible_provisioning" {

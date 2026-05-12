@@ -17,10 +17,43 @@
         line: "listen_addresses = '*'"
       notify: Restart postgres
 
-    - name: Allow Web Server to connect (HBA Configuration)
+    - name: Collect allowed database client IPs from app groups
+      ansible.builtin.set_fact:
+        db_allowed_client_ips: >-
+          {{
+            (
+              groups.get('web_servers', [])
+              + groups.get('minitwit_servers', [])
+              + groups.get('minitwit_lb_primary', [])
+              + groups.get('minitwit_lb_secondary', [])
+            )
+            | unique
+            | map('extract', hostvars, 'ansible_host')
+            | select('defined')
+            | reject('equalto', '')
+            | unique
+            | list
+          }}
+
+    - name: Ensure at least one DB client IP is available
+      ansible.builtin.assert:
+        that:
+          - db_allowed_client_ips | length > 0
+        fail_msg: "No application node IPs found; refusing to widen PostgreSQL access."
+
+    - name: Remove broad PostgreSQL access rule
       ansible.builtin.lineinfile:
         path: /etc/postgresql/16/main/pg_hba.conf
-        line: "host all all 0.0.0.0/0 md5"
+        regexp: '^host\s+all\s+all\s+0\.0\.0\.0/0\s+md5$'
+        state: absent
+      notify: Restart postgres
+
+    - name: Allow only app nodes in PostgreSQL HBA
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/16/main/pg_hba.conf
+        line: "host all all {{ item }}/32 scram-sha-256"
+        insertafter: EOF
+      loop: "{{ db_allowed_client_ips }}"
       notify: Restart postgres
 
     - name: Create MiniTwit Database

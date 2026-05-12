@@ -1,28 +1,17 @@
-- name: Force clear apt locks and corrupted cache
-  ansible.builtin.shell: |
-    rm -f /var/lib/apt/lists/lock
-    rm -f /var/cache/apt/archives/lock
-    rm -f /var/lib/dpkg/lock*
-    apt-get clean
-    rm -rf /var/lib/apt/lists/*
-    rm -f /etc/apt/sources.list.d/docker*.list
-    rm -f /etc/apt/sources.list.d/*docker*
-    rm -f /etc/apt/trusted.gpg.d/docker*
-    rm -f /etc/apt/keyrings/docker.gpg
-  become: true
-  changed_when: true
+- name: Optional cleanup of legacy Docker repo artifacts
+  when: cleanup_legacy_docker_repo | bool
+  block:
+    - name: Remove legacy Docker repository entry
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+        state: absent
+      become: true
 
-- name: Remove legacy Docker repository entry
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
-    state: absent
-  become: true
-
-- name: Remove legacy Docker GPG key file
-  ansible.builtin.file:
-    path: /usr/share/keyrings/docker-archive-keyring.gpg
-    state: absent
-  become: true
+    - name: Remove legacy Docker GPG key file
+      ansible.builtin.file:
+        path: /usr/share/keyrings/docker-archive-keyring.gpg
+        state: absent
+      become: true
 
 - name: Create apt keyrings directory
   ansible.builtin.file:
@@ -115,6 +104,27 @@
     - do_api_token != ""
     - inventory_hostname in groups.get('minitwit_lb_primary', []) or inventory_hostname in groups.get('minitwit_lb_secondary', [])
   no_log: true
+
+- name: Store floating IP value for failover scripts
+  ansible.builtin.copy:
+    content: "{{ keepalived_virtual_ip }}"
+    dest: /etc/minitwit_floating_ip
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
+
+- name: Ensure keepalived auth secret is overridden
+  ansible.builtin.assert:
+    that:
+      - keepalived_auth_pass != 'change_me_in_ansible_vault'
+    fail_msg: "Set keepalived_auth_pass via Ansible Vault or extra vars before HA deployment."
+  when: >
+    inventory_hostname in groups.get('minitwit_lb_primary', []) or
+    inventory_hostname in groups.get('minitwit_lb_secondary', [])
 
 - name: Deploy keepalived configuration (primary server)
   ansible.builtin.template:

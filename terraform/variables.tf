@@ -93,6 +93,12 @@ variable "digitalocean_droplet_size" {
   default     = "s-1vcpu-2gb"
 }
 
+variable "digitalocean_db_droplet_size" {
+  type        = string
+  description = "DigitalOcean droplet size for the database node"
+  default     = "s-1vcpu-1gb"
+}
+
 variable "digitalocean_ssh_key_name" {
   type        = string
   description = "DigitalOcean SSH key name"
