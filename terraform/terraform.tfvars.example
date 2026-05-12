@@ -1,0 +1,31 @@
+# MiniTwit Terraform example configuration
+# Copy this file to terraform.tfvars and adjust values for your environment.
+
+project_name = "minitwit"
+environment = "prod"
+domain_name = "minitwit.tech"
+letsencrypt_email = "you@example.com"
+
+dockerhub_username = "sn3ke"
+image_tag = "latest"
+
+postgres_connection_string = ""
+grafana_admin_user = "admin"
+grafana_admin_password = "change-me"
+
+digitalocean_region = "sfo3"
+digitalocean_droplet_size = "s-1vcpu-2gb"
+digitalocean_ssh_key_name = "MiniTwit"
+digitalocean_firewall_enable = true
+
+ssh_private_key_path = "~/.ssh/id_rsa"
+
+ansible_playbook_path = "../ansible/playbook.yml"
+provision_with_ansible = true
+ansible_verbose = false
+
+common_tags = {
+  Project = "MiniTwit"
+  ManagedBy = "Terraform"
+  Environment = "prod"
+}

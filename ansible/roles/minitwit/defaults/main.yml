@@ -1,3 +1,12 @@
 alloy_docker_containers_host_path: /var/lib/docker/containers
 loki_config_uid: 10001
 loki_config_gid: 10001
+
+# Off by default; enable only for one-time host migrations.
+cleanup_legacy_docker_repo: false
+
+keepalived_interface: eth0
+keepalived_virtual_router_id: 51
+keepalived_auth_pass: change_me_in_ansible_vault
+keepalived_virtual_ip: 138.68.126.154
+keepalived_virtual_ip_cidr: 24

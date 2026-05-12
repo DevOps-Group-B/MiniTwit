@@ -2,15 +2,26 @@
 # Notification script when transitioning to MASTER state.
 # This follows the DigitalOcean Reserved IP pattern with a metadata check and retries.
 
-RESERVED_IP="138.68.126.154"
 LOGFILE="/var/log/keepalived-notify.log"
 TOKEN_FILE="/etc/minitwit_do_token"
+FLOATING_IP_FILE="/etc/minitwit_floating_ip"
 METADATA_ID_URL="http://169.254.169.254/metadata/v1/id"
 METADATA_RESERVED_IP_URL="http://169.254.169.254/metadata/v1/reserved_ip/ipv4/active"
 
 log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" >> "$LOGFILE"
 }
+
+if [ ! -f "$FLOATING_IP_FILE" ]; then
+    log_message "ERROR: Floating IP file not found at $FLOATING_IP_FILE"
+    exit 1
+fi
+
+RESERVED_IP=$(cat "$FLOATING_IP_FILE")
+if [ -z "$RESERVED_IP" ]; then
+    log_message "ERROR: Floating IP value is empty in $FLOATING_IP_FILE"
+    exit 1
+fi
 
 log_message "Transitioned to MASTER state, checking Reserved IP $RESERVED_IP"
 

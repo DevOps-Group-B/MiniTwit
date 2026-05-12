@@ -1,0 +1,7 @@
+# Network configuration template for cloud-init
+
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    dhcp6: true

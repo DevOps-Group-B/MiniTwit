@@ -1,21 +1,107 @@
 ---
-- name: Provision and deploy MiniTwit
-  hosts: minitwit_servers
+# PLAY 1: CONFIGURE DATABASE SERVER
+- name: Configure Production Database
+  hosts: db_servers
   become: true
+  tasks:
+    - name: Install PostgreSQL 16
+      ansible.builtin.apt:
+        name: [postgresql, postgresql-contrib, python3-psycopg2]
+        state: present
+        update_cache: true
 
+    - name: Configure PostgreSQL to listen on all interfaces
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/16/main/postgresql.conf
+        regexp: "^#?listen_addresses ="
+        line: "listen_addresses = '*'"
+      notify: Restart postgres
+
+    - name: Collect allowed database client IPs from app groups
+      ansible.builtin.set_fact:
+        db_allowed_client_ips: >-
+          {{
+            (
+              groups.get('web_servers', [])
+              + groups.get('minitwit_servers', [])
+              + groups.get('minitwit_lb_primary', [])
+              + groups.get('minitwit_lb_secondary', [])
+            )
+            | unique
+            | map('extract', hostvars, 'ansible_host')
+            | select('defined')
+            | reject('equalto', '')
+            | unique
+            | list
+          }}
+
+    - name: Ensure at least one DB client IP is available
+      ansible.builtin.assert:
+        that:
+          - db_allowed_client_ips | length > 0
+        fail_msg: "No application node IPs found; refusing to widen PostgreSQL access."
+
+    - name: Remove broad PostgreSQL access rule
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/16/main/pg_hba.conf
+        regexp: '^host\s+all\s+all\s+0\.0\.0\.0/0\s+md5$'
+        state: absent
+      notify: Restart postgres
+
+    - name: Allow only app nodes in PostgreSQL HBA
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/16/main/pg_hba.conf
+        line: "host all all {{ item }}/32 scram-sha-256"
+        insertafter: EOF
+      loop: "{{ db_allowed_client_ips }}"
+      notify: Restart postgres
+
+    - name: Create MiniTwit Database
+      community.postgresql.postgresql_db:
+        name: minitwit
+      become_user: postgres
+
+    - name: Create Database User (Matches Schema)
+      community.postgresql.postgresql_user:
+        db: minitwit
+        name: minitwit_user
+        password: "password123" 
+        priv: "ALL"
+      become_user: postgres
+
+    - name: Upload and Apply Schema
+      community.postgresql.postgresql_query:
+        db: minitwit
+        # Fixed path based on your folder structure image
+        path: "{{ playbook_dir }}/roles/minitwit/files/database/schema.sql"
+      become_user: postgres
+
+  handlers:
+    - name: Restart postgres
+      ansible.builtin.systemd:
+        name: postgresql
+        state: restarted
+
+# PLAY 2: CONFIGURE WEB SERVER & MONITORING
+- name: Provision and deploy MiniTwit
+  hosts: "web_servers:minitwit_servers"
+  become: true
   vars:
+    deployment_mode: "production"
     image_name: "minitwitimage"
     container_name: "minitwit"
     minitwit_app_instances: 2
     app_port: "5273"
-    db_volume: "minitwit_db_volume"
     domain_name: "{{ domain_name | default('minitwit.tech', true) }}"
     letsencrypt_email: "{{ letsencrypt_email | default('bror@live.dk', true) }}"
-    # These fall back to 'latest' if run locally via Vagrant
-    dockerhub_user: "{{ dockerhub_username | default('sn3ke') }}"
+    dockerhub_user: "{{ dockerhub_username | default('sn3ke', true) }}"
     app_version: "{{ image_tag | default('latest') }}"
+    db_conn_production: "Host={{ db_internal_ip | default('127.0.0.1') }};Database=minitwit;Username=minitwit_user;Password=password123"
+    postgres_connection_string: "{{ postgres_connection_string | default(db_conn_production, true) }}"
+    grafana_admin_user: "{{ grafana_admin_user | default('admin', true) }}"
+    grafana_admin_password: "{{ grafana_admin_password | default('password123', true) }}"
+    tls_proxy_enabled: "{{ tls_proxy_enabled | default(true) }}"
     # DigitalOcean API token for floating IP failover (pass via -e do_api_token=<token>)
     do_api_token: "{{ do_api_token | default('', true) }}"
-
   roles:
     - minitwit
