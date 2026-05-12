@@ -22,6 +22,10 @@ CVE-2026-33816
 CVE-2026-32281
 CVE-2026-32283
 CVE-2026-33810
+CVE-2026-42151
+CVE-2026-21728
+CVE-2026-28377
+CVE-2026-42154
 # Alpine 3.23.3 base image CVEs (OpenSSL and nghttp2)
 # Patches available but not yet in base image tags
 CVE-2026-31789
