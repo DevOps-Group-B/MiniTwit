@@ -3,6 +3,19 @@ This is Group B's exam submission for the DevOps, Software Evolution and Softwar
 
 MiniTwit is a .NET 9 application with a web UI, automated tests, and infrastructure automation for local and production deployment. This repository combines the application code, monitoring stack, and deployment configuration used to run the project.
 
+## Description
+
+The repository is structured around three main areas:
+
+- `itu-minitwit/`: the ASP.NET Core application, tests, and monitoring assets
+- `ansible/`: deployment automation for server configuration and application rollout
+- `terraform/`: infrastructure provisioning for production environments
+
+The application includes:
+
+- simulator endpoints for coursework-style automated interaction
+- metrics and logs through Prometheus, Grafana, Loki, and Alloy
+
 ## Demo
 
 The current repository documentation references these deployment endpoints:
