@@ -23,7 +23,8 @@ The current repository documentation references these deployment endpoints:
 - Application: `https://minitwit.tech`, `https://www.minitwit.tech/` or `http://165.227.170.149`
 - Monitoring UI: `http://165.227.170.149:3000`
 
-If those endpoints change, update the URLs here and in the deployment configuration.
+They are included as references for the project report and infrastructure setup.
+If they change, this file should be updated accordingly.
 
 ### 1. Local Setup (Vagrant + Ansible)
 To start a local Ubuntu VM that mimics our production server on your own machine:
