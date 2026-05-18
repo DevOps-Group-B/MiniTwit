@@ -1,7 +1,16 @@
 # MiniTwit 
-Our links:
-Minitwit Website: https://minitwit.tech, https://www.minitwit.tech/ or http://165.227.170.149
-Monitoring: http://165.227.170.149:3000
+This is Group B's exam submission for the DevOps, Software Evolution and Software Maintenance BSc course at ITU  
+
+MiniTwit is a .NET 9 application with a web UI, automated tests, and infrastructure automation for local and production deployment. This repository combines the application code, monitoring stack, and deployment configuration used to run the project.
+
+## Demo
+
+The current repository documentation references these deployment endpoints:
+
+- Application: `https://minitwit.tech`, `https://www.minitwit.tech/` or `http://165.227.170.149`
+- Monitoring UI: `http://165.227.170.149:3000`
+
+If those endpoints change, update the URLs here and in the deployment configuration.
 
 ### 1. Local Setup (Vagrant + Ansible)
 To start a local Ubuntu VM that mimics our production server on your own machine:
