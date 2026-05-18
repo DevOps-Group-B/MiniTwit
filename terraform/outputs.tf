@@ -49,9 +49,9 @@ output "access_urls" {
 output "ssh_connection_commands" {
   description = "SSH connection strings for HA and DB nodes"
   value = {
-    lb_primary = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit_lb_primary.ipv4_address}"
+    lb_primary   = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit_lb_primary.ipv4_address}"
     lb_secondary = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.minitwit_lb_secondary.ipv4_address}"
-    db_node = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.database.ipv4_address}"
+    db_node      = "ssh -i ${var.ssh_private_key_path} root@${digitalocean_droplet.database.ipv4_address}"
   }
 }
 

@@ -13,7 +13,8 @@ postgres_connection_string = ""
 grafana_admin_user = "admin"
 grafana_admin_password = "change-me"
 
-digitalocean_region = "sfo3"
+digitalocean_token = "DigitalOcean API token"
+digitalocean_region = "fra1"
 digitalocean_droplet_size = "s-1vcpu-2gb"
 digitalocean_ssh_key_name = "MiniTwit"
 digitalocean_firewall_enable = true

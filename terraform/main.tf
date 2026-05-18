@@ -88,8 +88,8 @@ resource "digitalocean_firewall" "database" {
   }
 
   inbound_rule {
-    protocol          = "tcp"
-    port_range        = "5432"
+    protocol   = "tcp"
+    port_range = "5432"
     source_droplet_ids = [
       digitalocean_droplet.minitwit_lb_primary.id,
       digitalocean_droplet.minitwit_lb_secondary.id,
@@ -119,7 +119,7 @@ resource "local_file" "ansible_inventory" {
 }
 
 resource "time_sleep" "wait_for_droplets" {
-  create_duration = "30s"
+  create_duration = "60s"
   depends_on = [
     digitalocean_droplet.minitwit_lb_primary,
     digitalocean_droplet.minitwit_lb_secondary,
