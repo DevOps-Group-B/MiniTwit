@@ -26,66 +26,25 @@ The current repository documentation references these deployment endpoints:
 They are included as references for the project report and infrastructure setup.
 If they change, this file should be updated accordingly.
 
-### 1. Local Setup (Vagrant + Ansible)
-To start a local Ubuntu VM that mimics our production server on your own machine:
+## Requirements
 
-1.  **Prerequisites:** Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/).
-2.  **Start the VM:**
-    ```bash
-    vagrant up
-    ```
-    *This command automatically creates a VM, installs Docker via Ansible, and starts the MiniTwit container.*
-3.  **Access:** Open [http://localhost:8080](http://localhost:8080) in your browser.
+Choose the toolchain based on how you want to work with the project locally.
 
-**Common Management Commands:**
-* `vagrant halt`: Power down the local VM.
-* `vagrant provision`: Re-run the Ansible playbook to apply configuration changes to the VM.
-* `vagrant destroy`: Completely delete the local VM.
+### Application development
 
----
+- .NET 9 SDK
+- optional: PostgreSQL 15+ if you do not want to use the SQLite fallback
 
-### 2. Docker Compose (For local testing)
-Run both the application and PostgreSQL database together:
+### Container-based runs
 
-```bash
-# Create .env file with database credentials
-cp .env.example .env
+- Docker Engine or Docker Desktop
+- Docker Compose
 
-# Start all services
-docker compose up
+### Infrastructure automation
 
-# Access the application
-open http://localhost
-```
-
-**Stop services:**
-```bash
-docker-compose down
-```
-> ⚠️ **Note:** This connects directly to the **production database**. Any cheeps or users you create will be real.
-
-### 2b. Docker Compose with TLS Proxy
-This is an optional manual setup. The CI/CD pipeline now deploys the same containerized proxy stack through Ansible, so you do not need a separate production compose file to use the pipeline.
-
-For the production stack, Nginx and Certbot run as Docker containers using the `nginxproxy/nginx-proxy` and `nginxproxy/acme-companion` images.
-
-1. Set `DOMAIN_NAME=minitwit.tech` and `LETSENCRYPT_EMAIL=you@example.com` in `.env`.
-2. If you already installed host-level Nginx or Certbot on the server, stop them first so ports `80` and `443` are free:
-   ```bash
-   sudo systemctl stop nginx
-   sudo systemctl disable nginx
-   ```
-3. Start the production stack:
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-   ```
-4. Watch the certificate container logs until issuance completes:
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f acme-companion
-   ```
-5. Open `https://minitwit.tech` and confirm the lock icon.
-
-The app container listens on port `5273` internally. The proxy container owns public ports `80` and `443`, and the ACME companion handles renewal automatically.
+- Ansible
+- Terraform
+- optional: Vagrant and VirtualBox for the legacy local VM flow
 
 ### Logging Stack (Loki + Alloy)
 The Docker Compose setup includes a Grafana Loki logging stack with Grafana Alloy:
