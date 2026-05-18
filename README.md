@@ -28,7 +28,7 @@ If they change, this file should be updated accordingly.
 
 ## Requirements
 
-Choose the toolchain based on how you want to work with the project locally.
+Make sure that the following is downloaded
 
 ### Application development
 
@@ -45,6 +45,74 @@ Choose the toolchain based on how you want to work with the project locally.
 - Ansible
 - Terraform
 - optional: Vagrant and VirtualBox for the legacy local VM flow
+
+## Installation
+
+### Option 1: Run locally with .NET
+
+This is the simplest development path.
+
+```bash
+cd itu-minitwit
+dotnet restore
+dotnet build
+dotnet run --project src/MiniTwit.Web
+```
+
+By default, the application falls back to a temporary SQLite database when
+`POSTGRES_CONNECTION_STRING` is not defined.
+
+Default local URL:
+
+- `http://localhost:5273`
+
+### Option 2: Run with Docker Compose
+
+The root `docker-compose.yml` starts the web application and monitoring services.
+It expects a PostgreSQL connection string to be supplied through `.env`.
+
+```bash
+cp .env.example .env
+# edit .env and set POSTGRES_CONNECTION_STRING, GRAFANA_ADMIN_USER, GRAFANA_ADMIN_PASSWORD
+docker compose up --build
+```
+
+Primary service URLs:
+
+- Application: `http://localhost:8080`
+- Grafana: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
+- Loki: `http://localhost:3100`
+
+### Option 3: Run with Vagrant
+
+The repository still supports a legacy VM-based local environment:
+
+```bash
+vagrant up
+```
+
+Management commands:
+
+```bash
+vagrant halt
+vagrant provision
+vagrant destroy
+```
+
+### Option 4: Provision infrastructure with Terraform
+
+For the infrastructure part of the course project:
+
+```bash
+cd terraform
+terraform init
+cp terraform.tfvars.example terraform.tfvars
+terraform plan
+terraform apply
+```
+
+More details are documented in `IaC_SETUP.md` and `terraform/README.md`.
 
 ### Logging Stack (Loki + Alloy)
 The Docker Compose setup includes a Grafana Loki logging stack with Grafana Alloy:
