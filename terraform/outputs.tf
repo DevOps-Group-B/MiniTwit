@@ -71,7 +71,6 @@ output "next_steps" {
     "2. Verify keepalived: ssh into both LB nodes and run 'sudo systemctl status keepalived'.",
     "3. Verify floating IP ownership on primary: 'ip addr | grep ${digitalocean_floating_ip.minitwit.ip_address}'.",
     "4. Verify DB connectivity from LB node: run the app and check DB logs.",
-    "5. Point DNS A record to ${digitalocean_floating_ip.minitwit.ip_address}."
   ]
 }
 

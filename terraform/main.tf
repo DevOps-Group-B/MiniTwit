@@ -119,7 +119,7 @@ resource "local_file" "ansible_inventory" {
 }
 
 resource "time_sleep" "wait_for_droplets" {
-  create_duration = "60s"
+  create_duration = "40s"
   depends_on = [
     digitalocean_droplet.minitwit_lb_primary,
     digitalocean_droplet.minitwit_lb_secondary,
@@ -134,4 +134,26 @@ resource "null_resource" "ansible_provisioning" {
   provisioner "local-exec" {
     command = "ansible-playbook -i ${local_file.ansible_inventory.filename} ${var.ansible_playbook_path}"
   }
+}
+# ==========================================================
+# 5. Automatic DNS pointing
+# ==========================================================
+resource "digitalocean_domain" "minitwit" {
+  name = var.domain_name
+}
+
+resource "digitalocean_record" "minitwit_a" {
+  domain = digitalocean_domain.minitwit.id
+  type   = "A"
+  name   = "@"
+  value  = digitalocean_floating_ip.minitwit.ip_address
+  ttl    = 300
+}
+
+resource "digitalocean_record" "minitwit_www" {
+  domain = digitalocean_domain.minitwit.id
+  type   = "A"
+  name   = "www"
+  value  = digitalocean_floating_ip.minitwit.ip_address
+  ttl    = 300
 }
