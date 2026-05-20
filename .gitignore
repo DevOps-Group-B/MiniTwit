@@ -2,3 +2,4 @@
 .vagrant
 .fake
 terraform.tfvars
+inventory.ini

@@ -75,6 +75,7 @@ resource "digitalocean_firewall" "web" {
   port_range       = "3000"
   source_addresses = ["0.0.0.0/0", "::/0"]
   }
+
   outbound_rule {
     protocol              = "tcp"
     port_range            = "1-65535"
