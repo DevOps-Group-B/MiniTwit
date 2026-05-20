@@ -143,7 +143,6 @@
     grafana_admin_password: ""
     tls_proxy_enabled: true
     do_api_token: ""
-    keepalived_auth_pass: ""
 
   roles:
     - minitwit

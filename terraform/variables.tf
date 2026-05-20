@@ -23,7 +23,18 @@ variable "domain_name" {
 variable "letsencrypt_email" {
   type        = string
   description = "Email for Let's Encrypt certificate registration"
-  default     = "local@minitwit.test"
+  default     = ""
+}
+
+variable "keepalived_auth_pass" {
+  type        = string
+  description = "Keepalived VRRP auth password (must be 1-8 characters)"
+  sensitive   = true
+
+  validation {
+    condition     = length(var.keepalived_auth_pass) > 0 && length(var.keepalived_auth_pass) <= 8
+    error_message = "keepalived_auth_pass must be 1-8 characters because keepalived auth_pass is limited to 8 characters."
+  }
 }
 
 # ============================================================================
@@ -60,13 +71,13 @@ variable "postgres_connection_string" {
 variable "grafana_admin_user" {
   type        = string
   description = "Grafana administrator username"
-  default     = "helgeandfriends"
+  default     = ""
 }
 
 variable "grafana_admin_password" {
   type        = string
   description = "Grafana administrator password"
-  default     = "admin"
+  default     = ""
   sensitive   = true
 }
 

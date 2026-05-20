@@ -70,12 +70,6 @@ resource "digitalocean_firewall" "web" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
-  inbound_rule {
-  protocol         = "tcp"
-  port_range       = "3000"
-  source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
   outbound_rule {
     protocol              = "tcp"
     port_range            = "1-65535"
@@ -121,6 +115,7 @@ resource "local_file" "ansible_inventory" {
     floating_ip      = digitalocean_floating_ip.minitwit.ip_address
     ssh_key_path     = pathexpand(var.ssh_private_key_path)
     project_name     = var.project_name
+    keepalived_auth_pass = var.keepalived_auth_pass
   })
 }
 
