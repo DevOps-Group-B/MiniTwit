@@ -444,13 +444,13 @@
 
 - name: Verify proxy serves traffic
   ansible.builtin.uri:
-    url: http://127.0.0.1/
+    url: http://localhost/
     headers:
       Host: "{{ domain_name }}"
     status_code: [200, 301, 302]
   register: proxy_healthcheck
-  retries: 10
-  delay: 3
+  retries: 20
+  delay: 5
   until: proxy_healthcheck.status in [200, 301, 302]
   when: tls_proxy_enabled | bool
 
