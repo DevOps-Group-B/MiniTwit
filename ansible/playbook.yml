@@ -6,7 +6,6 @@
   vars:
     db_name: "minitwit"
     db_user: "minitwit_user"
-    db_password: "your_secure_password"
 
   tasks:
     - name: Update apt cache
@@ -132,7 +131,7 @@
     container_name: "minitwit"
     minitwit_app_instances: 2
     app_port: "5273"
-    db_password: "your_secure_password"
+    db_password: "{{ db_password }}"
     domain_name: "minitwit.tech"
     letsencrypt_email: ""
     dockerhub_user: "{{ dockerhub_username | default('sn3ke', true) }}"
