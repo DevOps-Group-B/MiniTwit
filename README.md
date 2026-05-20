@@ -25,7 +25,7 @@ The current repository documentation references these deployment endpoints:
   - `https://www.minitwit.tech/` 
   - `http://165.227.170.149`
 - Monitoring UI: 
-  -http://165.227.170.149:3000`
+  - `http://165.227.170.149:3000`
 
 They are included as references for the project report and infrastructure setup.
 If they change, this file should be updated accordingly.
