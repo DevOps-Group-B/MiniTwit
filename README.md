@@ -20,10 +20,12 @@ The application includes:
 
 The current repository documentation references these deployment endpoints:
 
-- Application: `https://minitwit.tech`, 
-              `https://www.minitwit.tech/` 
-              or `http://165.227.170.149`
-- Monitoring UI: `http://165.227.170.149:3000`
+- Application: 
+  - `https://minitwit.tech`
+  - `https://www.minitwit.tech/` 
+  - `http://165.227.170.149`
+- Monitoring UI: 
+  -http://165.227.170.149:3000`
 
 They are included as references for the project report and infrastructure setup.
 If they change, this file should be updated accordingly.
