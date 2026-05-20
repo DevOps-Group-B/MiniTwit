@@ -9,9 +9,9 @@ keepalived_auth_pass = "insert your own"
 dockerhub_username = "insert your own"
 image_tag = "latest"
 
-postgres_connection_string = "insert your own"
+postgres_connection_string = ""
 grafana_admin_user = "insert your own"
-grafana_admin_password = "insert your own
+grafana_admin_password = "insert your own"
 
 digitalocean_region = "fra1"
 digitalocean_droplet_size = "s-1vcpu-2gb"
