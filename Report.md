@@ -23,6 +23,7 @@
     - [Reflecting on the DevOps style of work](#reflecting-on-the-devops-style-of-work)
   - [While our DevOps tech and implementation was successful our team dynamic was a bit of a mess. The idea of DevOps is to share the responsibility, but the way the tasks was set up incentivized us to limit the number of people working at a time in order to effectively refactor the architecture in time. The big takeaway here is that doing DevOps right takes a real commitment to cross-training and pair programming. Next time around, we need to make sure everyone gets to learn and deploy and refactor the system rather than a few experts doing most of the work.](#while-our-devops-tech-and-implementation-was-successful-our-team-dynamic-was-a-bit-of-a-mess-the-idea-of-devops-is-to-share-the-responsibility-but-the-way-the-tasks-was-set-up-incentivized-us-to-limit-the-number-of-people-working-at-a-time-in-order-to-effectively-refactor-the-architecture-in-time-the-big-takeaway-here-is-that-doing-devops-right-takes-a-real-commitment-to-cross-training-and-pair-programming-next-time-around-we-need-to-make-sure-everyone-gets-to-learn-and-deploy-and-refactor-the-system-rather-than-a-few-experts-doing-most-of-the-work)
   - [Use of Generative AI](#use-of-generative-ai)
+  - [https://github.com/DevOps-Group-B/MiniTwit/commit/16ad2acd1c119d9a7f7fc3aa6839a56d29a438b4](#httpsgithubcomdevops-group-bminitwitcommit16ad2acd1c119d9a7f7fc3aa6839a56d29a438b4)
   - [References](#references)
   - [Appendix](#appendix)
 
@@ -94,9 +95,14 @@ While our DevOps tech and implementation was successful our team dynamic was a b
 ---
 
 ## Use of Generative AI
+The biggest uses of LLM models was for the migration of data, setting up High Availability setups as well as different architectures regarding IaC. We used Gemini 3.0 Pro chat to help use genereate the SQL scripts to manually go on the database server to correct the type missmatchs. It was very succesful. Secondly we also used LLMs when migrating from Vagrant to Terraform. We use Github Copilot with the "auto" model selected. This made it possible to for the model to use agents, making it able to see the whole codebase and look into files for missing information. This was however a frustrating experience as the agent created large changes that we have a hard time understanding. It also just didn't work most of the time. Some examples can be seen here: 
+Commit [16bcff9](https://github.com/DevOps-Group-B/MiniTwit/commit/16bcff94dc48f949be449ff45df60305c4f148b4)
 
-ITU's rules on the use of generative AI apply for this report too. They are described here and in detail here. Please follow them. For your report that means that you have to state which generative AI tools have been used for which task(s) in your projects. Additionally, describe how generative AI tools have been used and briefly reflect and discuss how they supported or hindered your work process.
+Commit [b41b77b]
+https://github.com/DevOps-Group-B/MiniTwit/commit/b41b77b21f87933ad9425dac3446fd018f3bb358
 
+Commit [16ad2ac]
+https://github.com/DevOps-Group-B/MiniTwit/commit/16ad2acd1c119d9a7f7fc3aa6839a56d29a438b4
 ---
 
 ## References
