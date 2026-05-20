@@ -104,7 +104,7 @@
         dest: /tmp/schema.sql
         owner: postgres
         group: postgres
-        mode: '0644'
+        mode: '0600'
       become: true
 
     - name: Apply schema (skip existing objects)
