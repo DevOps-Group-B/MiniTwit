@@ -5,21 +5,21 @@ project_name = "minitwit"
 environment = "prod"
 domain_name = "minitwit.tech"
 letsencrypt_email = "you@example.com"
-
-dockerhub_username = "sn3ke"
+keepalived_auth_pass = "insert your own"
+dockerhub_username = "insert your own"
 image_tag = "latest"
 
 postgres_connection_string = ""
-grafana_admin_user = "admin"
-grafana_admin_password = "change-me"
+grafana_admin_user = "insert your own"
+grafana_admin_password = "insert your own"
 
-digitalocean_region = "sfo3"
+digitalocean_region = "fra1"
 digitalocean_droplet_size = "s-1vcpu-2gb"
-digitalocean_ssh_key_name = "MiniTwit"
+digitalocean_ssh_key_name = "insert your own"
 digitalocean_firewall_enable = true
+digitalocean_token = "insert your own"
 
-ssh_private_key_path = "~/.ssh/id_rsa"
-
+ssh_private_key_path = "insert your own"
 ansible_playbook_path = "../ansible/playbook.yml"
 provision_with_ansible = true
 ansible_verbose = false

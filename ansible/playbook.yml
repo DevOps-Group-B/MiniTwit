@@ -3,12 +3,28 @@
 - name: Configure Production Database
   hosts: db_servers
   become: true
+  vars:
+    db_name: "minitwit"
+    db_user: "minitwit_user"
+
   tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      retries: 3
+      delay: 5
+
     - name: Install PostgreSQL 16
       ansible.builtin.apt:
-        name: [postgresql, postgresql-contrib, python3-psycopg2]
+        name:
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2
         state: present
-        update_cache: true
+      register: apt_res
+      until: apt_res is success
+      retries: 6
+      delay: 10
 
     - name: Configure PostgreSQL to listen on all interfaces
       ansible.builtin.lineinfile:
@@ -58,22 +74,46 @@
 
     - name: Create MiniTwit Database
       community.postgresql.postgresql_db:
-        name: minitwit
+        name: "{{ db_name }}"
+        state: present
+      become: true
       become_user: postgres
 
-    - name: Create Database User (Matches Schema)
+    - name: Create Database User
       community.postgresql.postgresql_user:
-        db: minitwit
-        name: minitwit_user
-        password: "password123" 
-        priv: "ALL"
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        state: present
+      become: true
       become_user: postgres
 
-    - name: Upload and Apply Schema
-      community.postgresql.postgresql_query:
-        db: minitwit
-        path: "{{ playbook_dir }}/roles/minitwit/files/database/schema.sql"
+    - name: Grant database privileges to user
+      community.postgresql.postgresql_privs:
+        db: "{{ db_name }}"
+        privs: ALL
+        type: database
+        role: "{{ db_user }}"
+        state: present
+      become: true
       become_user: postgres
+
+    - name: Copy schema file to server
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/roles/minitwit/files/database/schema.sql"
+        dest: /tmp/schema.sql
+        owner: postgres
+        group: postgres
+        mode: '0600'
+      become: true
+
+    - name: Apply schema (skip existing objects)
+      ansible.builtin.shell:
+        cmd: psql -U postgres -d {{ db_name }} --set ON_ERROR_STOP=off -f /tmp/schema.sql
+      become: true
+      become_user: postgres
+      register: schema_result
+      changed_when: "'CREATE' in schema_result.stdout"
+      failed_when: false
 
   handlers:
     - name: Restart postgres
@@ -91,23 +131,17 @@
     container_name: "minitwit"
     minitwit_app_instances: 2
     app_port: "5273"
-    
-    # Clean flat defaults. Extra-vars (-e) passed via CI/CD automatically override these natively.
+    db_password: "{{ db_password }}"
     domain_name: "minitwit.tech"
-    letsencrypt_email: "brOh@itu.dk"
-    
-    # Safe reference: The target variable name differs from the source extra-var key.
+    letsencrypt_email: ""
     dockerhub_user: "{{ dockerhub_username | default('sn3ke', true) }}"
     app_version: "{{ image_tag | default('latest', true) }}"
-    
-    db_conn_production: "Host={{ db_internal_ip | default('127.0.0.1', true) }};Database=minitwit;Username=minitwit_user;Password=password123"
+    db_conn_production: "Host={{ db_internal_ip | default('127.0.0.1', true) }};Database=minitwit;Username=minitwit_user;Password={{ db_password }}"
     postgres_connection_string: "{{ db_conn_production }}"
-    
-    grafana_admin_user: "admin"
-    grafana_admin_password: "password123"
+    grafana_admin_user: ""
+    grafana_admin_password: ""
     tls_proxy_enabled: true
-    
-    # DigitalOcean API token for floating IP failover (pass via -e do_api_token=<token>)
     do_api_token: ""
+
   roles:
     - minitwit

@@ -31,3 +31,4 @@ project_name=${project_name}
 # Pass the Database IP to the Web Server
 db_internal_ip=${db_ip}
 keepalived_virtual_ip=${floating_ip}
+keepalived_auth_pass="${keepalived_auth_pass}"
