@@ -1,0 +1,78 @@
+name: Build Report PDF
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc and LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
+
+      - name: Create build directory
+        run: mkdir -p report/build
+
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc report/report.md \
+            --from markdown+raw_html \
+            --to pdf \
+            --output report/build/BSc_group_b.pdf \
+            --resource-path report \
+            --pdf-engine=pdflatex \
+            --variable geometry:margin=1in \
+            --variable fontsize=11pt \
+            --variable urlcolor=blue \
+            --variable linkcolor=black
+
+      - name: Verify PDF was created
+        run: |
+          if [ ! -f report/build/BSc_group_b.pdf ]; then
+            echo "PDF was not created!"
+            exit 1
+          fi
+          echo "PDF created successfully: $(du -h report/build/BSc_group_b.pdf | cut -f1)"
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-report
+          path: report/build/BSc_group_b.pdf
+          retention-days: 90
+
+      - name: Commit PDF to repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add report/build/BSc_group_b.pdf
+          if git diff --staged --quiet; then
+            echo "No PDF changes to commit."
+            exit 0
+          fi
+
+          git commit -m "ci: update report PDF [skip ci]"
+
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Push failed on attempt $attempt, retrying..."
+          done
+
+          echo "Push failed after 3 attempts."
+          exit 1
