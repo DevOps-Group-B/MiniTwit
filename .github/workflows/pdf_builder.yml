@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'report/**'
+      - '!report/build/**'
       - '.github/workflows/pdf_builder.yml'
   workflow_dispatch:
 
