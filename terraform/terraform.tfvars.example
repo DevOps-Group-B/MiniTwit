@@ -9,6 +9,7 @@ keepalived_auth_pass = "insert your own"
 dockerhub_username = "insert your own"
 image_tag = "latest"
 
+db_password="your_database_password_here"
 postgres_connection_string = ""
 grafana_admin_user = "insert your own"
 grafana_admin_password = "insert your own"

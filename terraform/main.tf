@@ -71,9 +71,9 @@ resource "digitalocean_firewall" "web" {
   }
 
   inbound_rule {
-  protocol         = "tcp"
-  port_range       = "3000"
-  source_addresses = ["0.0.0.0/0", "::/0"]
+    protocol         = "tcp"
+    port_range       = "3000"
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
   outbound_rule {
@@ -115,12 +115,12 @@ resource "digitalocean_firewall" "database" {
 resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventory.ini"
   content = templatefile("${path.module}/templates/inventory-production.tpl", {
-    primary_web_ip   = digitalocean_droplet.minitwit_lb_primary.ipv4_address
-    secondary_web_ip = digitalocean_droplet.minitwit_lb_secondary.ipv4_address
-    db_ip            = digitalocean_droplet.database.ipv4_address
-    floating_ip      = digitalocean_floating_ip.minitwit.ip_address
-    ssh_key_path     = pathexpand(var.ssh_private_key_path)
-    project_name     = var.project_name
+    primary_web_ip       = digitalocean_droplet.minitwit_lb_primary.ipv4_address
+    secondary_web_ip     = digitalocean_droplet.minitwit_lb_secondary.ipv4_address
+    db_ip                = digitalocean_droplet.database.ipv4_address
+    floating_ip          = digitalocean_floating_ip.minitwit.ip_address
+    ssh_key_path         = pathexpand(var.ssh_private_key_path)
+    project_name         = var.project_name
     keepalived_auth_pass = var.keepalived_auth_pass
   })
 }
@@ -139,7 +139,7 @@ resource "null_resource" "ansible_provisioning" {
   depends_on = [time_sleep.wait_for_droplets, local_file.ansible_inventory]
 
   provisioner "local-exec" {
-    command = "ansible-playbook -i ${local_file.ansible_inventory.filename} ${var.ansible_playbook_path}"
+    command = "ansible-playbook -i ${local_file.ansible_inventory.filename} ${var.ansible_playbook_path} -e '${jsonencode({ db_password = var.db_password })}'"
   }
 }
 # ==========================================================
