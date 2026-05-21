@@ -1,148 +1,200 @@
-# MiniTwit 
-Our links:
-Minitwit Website: https://minitwit.tech, https://www.minitwit.tech/ or http://165.227.170.149
-Monitoring: http://165.227.170.149:3000
+# MiniTwit (Chirp!) 🐦
 
-### 1. Local Setup (Vagrant + Ansible)
-To start a local Ubuntu VM that mimics our production server on your own machine:
+> A Twitter-like social media platform built with ASP.NET 9.0, deployed on DigitalOcean with full DevOps automation.
 
-1.  **Prerequisites:** Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/).
-2.  **Start the VM:**
-    ```bash
-    vagrant up
-    ```
-    *This command automatically creates a VM, installs Docker via Ansible, and starts the MiniTwit container.*
-3.  **Access:** Open [http://localhost:8080](http://localhost:8080) in your browser.
+MiniTwit (nicknamed **Chirp!**) is a Group B exam project for the *DevOps, Software Evolution and Software Maintenance* BSc course at IT University of Copenhagen. It is a microblogging application where users can post short messages ("cheeps"), follow other users, and earn achievements — all backed by a production-grade DevOps pipeline.
 
-**Common Management Commands:**
-* `vagrant halt`: Power down the local VM.
-* `vagrant provision`: Re-run the Ansible playbook to apply configuration changes to the VM.
-* `vagrant destroy`: Completely delete the local VM.
+**🌐 Live application:** https://minitwit.tech  
+**📊 Monitoring (Grafana):** http://209.38.113.150:3000/dashboards
+
+
+## Getting Started
+
+### Prerequisites
+
+**For local development:**
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- Docker Engine or Docker Desktop (for the Compose option)
+
+**For infrastructure automation:**
+- Ansible
+- Terraform / OpenTofu
+- A DigitalOcean account + API token
 
 ---
 
-### 2. Docker Compose (For local testing)
-Run both the application and PostgreSQL database together:
+### Option 1: Run locally with .NET
+
+The simplest path — uses SQLite automatically when no PostgreSQL connection string is set.
 
 ```bash
-# Create .env file with database credentials
+cd itu-minitwit
+dotnet restore
+dotnet build
+dotnet run --project src/MiniTwit.Web
+```
+
+App available at: **http://localhost:5273**
+
+---
+
+### Option 2: Run with Docker Compose
+
+Starts the full stack — application, PostgreSQL, Prometheus, Grafana, Loki, and Alloy.
+
+```bash
 cp .env.example .env
-
-# Start all services
-docker compose up
-
-# Access the application
-open http://localhost
+# Edit .env and fill in POSTGRES_CONNECTION_STRING, GRAFANA_ADMIN_USER, GRAFANA_ADMIN_PASSWORD
+docker compose up --build
 ```
 
-**Stop services:**
-```bash
-docker-compose down
-```
-> ⚠️ **Note:** This connects directly to the **production database**. Any cheeps or users you create will be real.
-
-### 2b. Docker Compose with TLS Proxy
-This is an optional manual setup. The CI/CD pipeline now deploys the same containerized proxy stack through Ansible, so you do not need a separate production compose file to use the pipeline.
-
-For the production stack, Nginx and Certbot run as Docker containers using the `nginxproxy/nginx-proxy` and `nginxproxy/acme-companion` images.
-
-1. Set `DOMAIN_NAME=minitwit.tech` and `LETSENCRYPT_EMAIL=you@example.com` in `.env`.
-2. If you already installed host-level Nginx or Certbot on the server, stop them first so ports `80` and `443` are free:
-   ```bash
-   sudo systemctl stop nginx
-   sudo systemctl disable nginx
-   ```
-3. Start the production stack:
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-   ```
-4. Watch the certificate container logs until issuance completes:
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f acme-companion
-   ```
-5. Open `https://minitwit.tech` and confirm the lock icon.
-
-The app container listens on port `5273` internally. The proxy container owns public ports `80` and `443`, and the ACME companion handles renewal automatically.
-
-### Logging Stack (Loki + Alloy)
-The Docker Compose setup includes a Grafana Loki logging stack with Grafana Alloy:
-
-* `alloy` tails Docker container logs from `/var/lib/docker/containers/*/*-json.log`
-* Alloy parses JSON log records and ships them to `loki`
-* Grafana auto-provisions Loki as a datasource (`uid: loki`)
-
-After `docker compose up`, open Grafana Explore and query logs, for example:
-
-```logql
-{job="docker"}
-```
-
-To focus on HTTP request logs from the web app, try:
-
-```logql
-{job="docker"} |= "HTTP"
-```
-
-### Production Log Rotation (logrotate)
-Production deployments via Ansible now install `logrotate` and deploy a policy in
-`/etc/logrotate.d/minitwit-docker-containers` for Docker JSON logs at
-`/var/lib/docker/containers/*/*-json.log`.
-
-Policy:
-
-* weekly rotation
-* rotate 14 archives
-* size threshold 50M
-* compress + delaycompress
-* dateext
-* copytruncate
-
-Quick verification on a server:
-
-```bash
-sudo ls -l /etc/logrotate.d/minitwit-docker-containers
-sudo cat /etc/logrotate.d/minitwit-docker-containers
-sudo logrotate --debug /etc/logrotate.conf
-```
-
-Force a test rotation:
-
-```bash
-sudo logrotate --force /etc/logrotate.conf
-sudo ls -lah /var/lib/docker/containers/*/*-json.log*
-docker logs --tail 20 minitwit
-```
+| Service | URL |
+|---------|-----|
+| Application | http://localhost:8080 |
+| Grafana | http://localhost:3000 |
+| Prometheus | http://localhost:9090 |
+| Loki | http://localhost:3100 |
 
 ---
 
-### 3. Manual Docker (Single Container)
-If you wish to run only the web container without PostgreSQL:
+### Option 3: Provision infrastructure with Terraform
+
+Provisions the full DigitalOcean infrastructure (droplets, firewalls, floating IP).
 
 ```bash
-# Build the image locally
-docker build -t minitwit/webserver ./itu-minitwit
-
-# Run with environment variable for PostgreSQL
-docker run -d \
-  -p 5273:5273 \
-  --name minitwit \
-  -e POSTGRES_CONNECTION_STRING="Host=your-db-host;Database=minitwit;Username=minitwit_user;Password=your_password;Port=5432" \
-  minitwit/webserver
+cd terraform
+terraform init
+cp terraform.tfvars.example terraform.tfvars
+# Fill in terraform.tfvars with your DO token, SSH key, domain, etc.
+terraform plan
+terraform apply
 ```
+
 
 ---
 
+## Running Tests
+
+The test suite includes unit, integration, and end-to-end (Playwright) tests.
+
+```bash
+cd itu-minitwit
+
+# Restore and build first
+dotnet restore
+dotnet build
+
+# Install Playwright browsers (needed for E2E tests)
+pwsh tests/End2end/bin/Debug/net9.0/playwright.ps1 install chromium
+
+# Run all tests
+dotnet test
+```
+
+All tests must pass before any deployment — a failing test blocks the CI/CD pipeline.
+
+---
+
+## Deploying to Production
+
+Production deployments are fully automated via **GitHub Actions + Ansible**. A push to `main` triggers the full pipeline. You can also deploy manually:
+
+### Prerequisites
+
+1. Servers provisioned via Terraform (see above)
+2. GitHub Secrets configured (see below)
+3. SSH access to the DigitalOcean droplets
+
+### Infrastructure Provisioning (Terraform)
+
+If starting from scratch:
+
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+Terraform will output the droplet IPs and auto-generate `ansible/inventory.ini`.
+
+### Application Deployment (Ansible)
+
+To deploy manually without GitHub Actions:
+
+```bash
+cd ansible
+ansible-playbook playbook.yml \
+  -i inventory.ini \
+  --extra-vars "image_tag=latest \
+    dockerhub_username=<your_dockerhub_user> \
+    dockerhub_token=<your_token> \
+    postgres_connection_string='Host=<db_ip>;Database=minitwit;Username=minitwit_user;Password=<pw>;Port=5432' \
+    grafana_admin_password=<password> \
+    do_api_token=<token> \
+    keepalived_auth_pass=<vrrp_password> \
+    keepalived_virtual_ip=<floating_ip>"
+```
 
 ### Required GitHub Secrets
-To enable successful deployments, the following secrets must be configured in the repository:
 
-* **`SSH_HOST`**: The IP address of the production server.
-* **`SSH_USER`**: The deployment user (typically `root`).
-* **`SSH_KEY`**: The private SSH key for server access.
-* **`DOCKERHUB_USERNAME`**: Your Docker Hub account ID.
-* **`DOCKERHUB_TOKEN`**: A Personal Access Token (PAT) for Docker Hub.
-* **`POSTGRES_CONNECTION_STRING`**: PostgreSQL connection string (e.g., `Host=164.92.164.171;Database=minitwit;Username=minitwit_user;Password=your_password;Port=5432`)
+Configure these in **Settings → Secrets and variables → Actions** in your GitHub repository:
 
-### Database Setup
-The application requires a PostgreSQL 15+ database server. Connection details are passed via the `POSTGRES_CONNECTION_STRING` environment variable.
+| Secret | Description |
+|--------|-------------|
+| `SSH_HOST` | IP of the primary LB droplet |
+| `SSH_HOST_SECONDARY` | IP of the secondary LB droplet |
+| `SSH_USER` | SSH user (typically `root`) |
+| `SSH_KEY` | Private SSH key for server access |
+| `DOCKERHUB_USERNAME` | Docker Hub account ID |
+| `DOCKERHUB_TOKEN` | Docker Hub Personal Access Token |
+| `POSTGRES_CONNECTION_STRING` | Full PostgreSQL connection string |
+| `GRAFANA_ADMIN_USER` | Grafana admin username |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
+| `LETSENCRYPT_EMAIL` | Email for Let's Encrypt certificate registration |
+| `DO_API_TOKEN` | DigitalOcean API token (for floating IP failover) |
+| `KEEPALIVED_AUTH_PASS` | Keepalived VRRP authentication password |
+| `FLOATING_IP` | DigitalOcean floating IP for HA failover |
+
+---
+
+
+## Contributing
+
+We follow a trunk-based development model — all changes go to `main` via pull requests.
+
+1. Fork the repository and create a feature branch:
+   ```bash
+   git checkout -b feature/my-feature
+   ```
+2. Make your changes. Ensure code is formatted:
+   ```bash
+   dotnet format
+   ```
+3. Run the full test suite locally:
+   ```bash
+   dotnet test
+   ```
+4. Open a pull request against `main`. The CI pipeline runs automatically on PR updates.
+5. Once approved and merged to `main`, the CD pipeline deploys to production automatically.
+
+> **Note**: The pipeline will reject any PR that fails formatting checks, static analysis, or tests. Fix these locally before pushing.
+
+---
+
+## Monitoring & Observability
+
+The full observability stack is deployed alongside the application:
+
+| Tool | Purpose | URL (production) |
+|------|---------|-----------------|
+| **Grafana** | Dashboards & alerting | http://minitwit.tech:3000 |
+| **Prometheus** | Metrics collection | http://minitwit.tech:9090 |
+| **Loki** | Log aggregation | (via Grafana Explore) |
+| **Alloy** | Log collection from Docker | internal |
+| **Node Exporter** | System metrics (CPU, memory, disk) | internal |
+
+Grafana dashboards are provisioned as code from `monitoring/grafana/dashboards/`
+
+
+---
 
