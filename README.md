@@ -198,3 +198,25 @@ Grafana dashboards are provisioned as code from `monitoring/grafana/dashboards/`
 
 ---
 
+## Video Demonstrations - Made by mikcl
+
+### 1. Infrastructure as Code (IaC)
+![IaC Setup](./report/images/iac.gif)
+
+---
+
+### 2. CI/CD Pipeline
+![CI/CD Pipeline](./report/images/ci_cd.gif)
+
+---
+
+### 3. Monitoring
+![Monitoring Setup](./report/images/monitoring.gif)
+
+---
+
+### 4. Centralized Logging
+![Logging Setup](./report/images/logging.gif)
+
+
+
