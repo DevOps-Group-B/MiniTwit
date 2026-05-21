@@ -14,6 +14,9 @@ name: CI_CD
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'report/**'
+      - '.github/workflows/pdf_builder.yml'
   workflow_dispatch:
 
 permissions:
