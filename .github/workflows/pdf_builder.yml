@@ -2,11 +2,9 @@ name: Build Report PDF
 
 on:
   push:
-    branches:
-      - main
-    paths:
+    branches: [ "main" ]
+    paths-ignore:
       - 'report/**'
-      - '!report/build/**'
       - '.github/workflows/pdf_builder.yml'
   workflow_dispatch:
 
