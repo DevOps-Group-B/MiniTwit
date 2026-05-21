@@ -61,6 +61,13 @@ variable "image_tag" {
   default     = "latest"
 }
 
+variable "db_password" {
+  type        = string
+  description = "Database password"
+  default     = ""
+  sensitive   = true
+}
+
 variable "postgres_connection_string" {
   type        = string
   description = "PostgreSQL connection string for the application"
