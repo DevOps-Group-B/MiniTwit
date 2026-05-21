@@ -88,23 +88,8 @@ Primary service URLs:
 - Prometheus: `http://localhost:9090`
 - Loki: `http://localhost:3100`
 
-### Option 3: Run with Vagrant
 
-The repository still supports a legacy VM-based local environment:
-
-```bash
-vagrant up
-```
-
-Management commands:
-
-```bash
-vagrant halt
-vagrant provision
-vagrant destroy
-```
-
-### Option 4: Provision infrastructure with Terraform
+### Option 3: Provision infrastructure with Terraform
 
 For the infrastructure part of the course project:
 
