@@ -184,15 +184,22 @@ jobs:
           playbook: ansible/playbook.yml
           directory: ./
           inventory: |
-            [minitwit_lb_primary]
+            [web_servers]
             minitwit-lb-primary ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}
+            minitwit-lb-secondary ansible_host=${{ secrets.SSH_HOST_SECONDARY }} ansible_user=${{ secrets.SSH_USER }}
+
+            [minitwit_lb_primary]
+            minitwit-lb-primary
 
             [minitwit_lb_secondary]
-            minitwit-lb-secondary ansible_host=${{ secrets.SSH_HOST_SECONDARY }} ansible_user=${{ secrets.SSH_USER }}
+            minitwit-lb-secondary
 
             [minitwit_servers:children]
             minitwit_lb_primary
             minitwit_lb_secondary
+
+            [db_servers]
+            minitwit-db ansible_host=${{ secrets.SSH_HOST_DB }} ansible_user=${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           options: |
             --extra-vars "dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }} image_tag=${{ github.run_number }} postgres_connection_string='${{ secrets.POSTGRES_CONNECTION_STRING }}' grafana_admin_user='${{ secrets.GRAFANA_ADMIN_USER }}' grafana_admin_password='${{ secrets.GRAFANA_ADMIN_PASSWORD }}' domain_name='minitwit.tech' letsencrypt_email='${{ secrets.LETSENCRYPT_EMAIL }}' do_api_token='${{ secrets.DO_API_TOKEN }}' keepalived_auth_pass='${{ secrets.KEEPALIVED_AUTH_PASS }}' keepalived_virtual_ip='${{ secrets.FLOATING_IP }}' db_password='${{ secrets.DB_PASSWORD }}'"
